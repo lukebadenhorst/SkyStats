@@ -1,0 +1,15 @@
+# Secrets
+.Renviron
+
+# R / RStudio
+.Rhistory
+.RData
+.Rproj.user/
+.Ruserdata
+
+# App caches
+cache/
+
+# renv library (lockfile is committed)
+renv/library/
+renv/staging/
