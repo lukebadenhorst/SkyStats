@@ -1,7 +1,7 @@
 # Demo Dashboard (first deliverable): Design
 
 - **Date:** 2026-10-06
-- **Status:** design presented. The user has **not yet said "yes"**, so confirm before building.
+- **Status:** approved and built on 2026-10-06 (branch `demo-dashboard`).
 - **Goal:** a showcase app for the group, finished in one day. Live flights work end to end; the other features appear as skeleton tabs.
 - **Parent spec:** `2026-10-06-flights-dashboard-design.md`. The demo is the first slice of it.
 
