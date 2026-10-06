@@ -47,6 +47,12 @@ To recapture the sample snapshot (costs 4 credits):
 Rscript data-raw/capture_sample.R
 ```
 
+Airline names come from the [OpenFlights](https://openflights.org/data) airline list, plus a few newer airlines added by hand. To rebuild the lookup (no credits needed):
+
+```sh
+Rscript data-raw/build_lookups.R
+```
+
 ## Tests
 
 ```r
@@ -61,12 +67,15 @@ The tests use a small JSON fixture and the bundled sample. They make no network 
 |---|---|
 | `app.R` | Page layout, global sidebar, wiring of the modules |
 | `R/data_api.R` | OpenSky fetch, parsing, shared 10-minute cache, sample fallback |
-| `R/data_prep.R` | Cleaning, airline codes, altitude bands, filters |
+| `R/data_prep.R` | Cleaning, airline codes and names, categories, altitude bands, filters |
+| `R/lookups.R` | Loads the lookup tables in `data/lookups/`; the hand-listed codes for categories |
 | `R/regions.R` | Analysis regions with bboxes and equal-area CRSs |
 | `R/mod_live.R` | Live Map tab |
 | `R/mod_placeholders.R` | Skeleton method tabs and About |
 | `data-raw/capture_sample.R` | Captures the bundled sample snapshot |
+| `data-raw/build_lookups.R` | Builds the airline name lookup |
 | `data/sample/` | The sample snapshot |
+| `data/lookups/` | Airline names by ICAO code |
 | `tests/testthat/` | Unit tests and fixtures |
 
 Data courtesy of The OpenSky Network.

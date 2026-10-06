@@ -252,7 +252,12 @@ about_ui <- function(id) {
           " (", code("data/sample/states_sample.rds"), "): used when there are no API ",
           "credentials or the API is unavailable, so the app always runs."
         ),
-        tags$li(strong("Planned:"), " OurAirports, OpenFlights airlines, the OpenSky aircraft database, and ", code("spData::world"), ".")
+        tags$li(
+          strong("Airline names"),
+          " (", code("data/lookups/airlines.rds"), "): OpenFlights airlines, matched on the ICAO code, ",
+          "plus a few newer airlines added by hand."
+        ),
+        tags$li(strong("Planned:"), " OurAirports, the OpenSky aircraft database, and ", code("spData::world"), ".")
       ),
       p(
         class = "small text-muted mb-0",
@@ -264,7 +269,8 @@ about_ui <- function(id) {
       tags$ul(
         tags$li("Coverage depends on volunteer ADS-B receivers, so it is dense over North America and Europe and sparse over oceans, Africa and parts of Asia."),
         tags$li("Each analysis uses a single snapshot; the API only serves the last hour of positions."),
-        tags$li("Airline codes come from the first three characters of the callsign. Private and military flights have no code."),
+        tags$li("Airline codes come from the first three characters of the callsign. Private and military flights have no code, and OpenFlights has no name for some newer airlines."),
+        tags$li("Categories are inferred from the callsign, airline and transponder address. Military flights with tactical callsigns are only caught inside the US military address block, and airlines that fly both passengers and freight count as passenger airlines."),
         tags$li("Origin country is the country of aircraft registration, not where the flight departed.")
       )
     ),

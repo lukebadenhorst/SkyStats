@@ -31,5 +31,5 @@ An R Shiny dashboard of global flights for the STAT3037A (Wits, Introduction to 
 
 ## Status (as of 2026-10-06)
 
-- The demo dashboard is built on branch `demo-dashboard` (not yet merged to `main`; no remote yet). The Live Map works end to end in both live and sample mode; the method tabs are skeletons. 45 tests pass.
+- The demo dashboard is built on branch `demo-dashboard` (not yet merged to `main`; no remote yet). The Live Map works end to end in both live and sample mode; the method tabs are skeletons. The sidebar filters by airline name (OpenFlights lookup in `data/lookups/`, rebuilt by `data-raw/build_lookups.R`) and by category (`flight_category()`: passenger, cargo, business jet, military, private, unknown). 60 tests pass.
 - **Next step:** write the full implementation plan for the main spec (superpowers `writing-plans`).

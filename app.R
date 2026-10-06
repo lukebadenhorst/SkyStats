@@ -7,6 +7,7 @@ library(bsicons)
 library(leaflet)
 
 poll_ms <- 10 * 60 * 1000
+airlines <- load_airlines()
 
 theme <- bs_theme(
   version = 5,
@@ -21,10 +22,16 @@ sidebar_filters <- sidebar(
   selectInput("region", "Region", region_choices()),
   selectizeInput(
     "airline",
-    "Airline code",
+    "Airline",
     choices = NULL,
     multiple = TRUE,
-    options = list(placeholder = "All airlines")
+    options = list(placeholder = "All (type a name or code)")
+  ),
+  checkboxGroupInput(
+    "categories",
+    "Category",
+    choices = category_levels,
+    selected = category_levels
   ),
   checkboxGroupInput(
     "bands",
@@ -82,27 +89,24 @@ server <- function(input, output, session) {
     }
   })
 
-  states <- reactive(prep_states(req(snapshot())$data))
+  states <- reactive(prep_states(req(snapshot())$data, airlines))
 
-  # Offer the airline codes present in the data, most common first.
+  # Offer the airlines present in the data by name, most common first.
+  # Values stay as ICAO codes, so filtering is unchanged.
   observe({
-    counts <- airline_counts(states())
-    choices <- stats::setNames(
-      names(counts),
-      paste0(names(counts), " (", as.integer(counts), ")")
-    )
     updateSelectizeInput(
       session,
       "airline",
-      choices = choices,
+      choices = airline_choices(states()),
       selected = isolate(input$airline),
       server = TRUE
     )
   })
 
   aircraft <- reactive({
-    # Unticking every altitude band means "show nothing", not "no filter".
-    if (length(input$bands) == 0) {
+    # Unticking every category or altitude band means "show nothing", not
+    # "no filter".
+    if (length(input$categories) == 0 || length(input$bands) == 0) {
       return(states()[0, ])
     }
     filter_states(
@@ -110,6 +114,7 @@ server <- function(input, output, session) {
       region_id = input$region,
       airlines = input$airline,
       bands = input$bands,
+      categories = input$categories,
       airborne_only = input$airborne_only
     )
   })

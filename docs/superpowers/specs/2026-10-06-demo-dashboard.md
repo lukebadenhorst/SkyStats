@@ -9,9 +9,10 @@
 
 - Live global aircraft from OpenSky `/states/all`, polled every 10 min through one process-level `cachem` cache shared across sessions. A **Refresh** button forces an update.
 - `leaflet` with `preferCanvas = TRUE`. Each aircraft is a circle marker coloured by altitude.
-- The popup shows callsign, airline code (callsign prefix), origin country, altitude, speed and heading.
+- The popup shows callsign, airline name and code (callsign prefix, named from `data/lookups/airlines.rds`), category, origin country, altitude, speed and heading.
 - KPI cards: aircraft count, % airborne, top 5 origin countries.
-- Working sidebar filters: region (zooms and crops, from `R/regions.R`), airline code, altitude band, airborne only.
+- Working sidebar filters: region (zooms and crops, from `R/regions.R`), airline (picked by name, filtered by ICAO code), category, altitude band, airborne only.
+- Category (passenger airline, cargo, business jet, military / government, private / general aviation, unknown) comes from `flight_category()` in `R/data_prep.R`. It applies rules in order: the US military icao24 block (ADF7C8-AFFFFF), hand-listed codes and airline-name patterns (`R/lookups.R`), then whether there is an airline code or any callsign. OpenSky's own `category` field is not used, because about 94% of aircraft report no category.
 - Data-source badge: `Live, updated hh:mm UTC` or `Sample snapshot`.
 - Sample fallback: one snapshot captured by `data-raw/capture_sample.R` into `data/sample/states_sample.rds`. It is used when credentials are missing or the API fails.
 

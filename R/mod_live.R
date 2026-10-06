@@ -129,7 +129,9 @@ mod_live_server <- function(id, aircraft, region_id) {
       DT::datatable(
         data.frame(
           Callsign = df$callsign,
-          Airline = df$airline_code,
+          Airline = df$airline_name,
+          Code = df$airline_code,
+          Category = df$flight_category,
           `Origin country` = df$origin_country,
           `Altitude (m)` = round(df$altitude),
           `Speed (km/h)` = round(df$velocity * 3.6),
@@ -149,6 +151,16 @@ comma <- function(x) {
   formatC(x, format = "d", big.mark = ",")
 }
 
+# "Name (CODE)", just "CODE" when the name is unknown, "n/a" with no code.
+airline_label <- function(name, code) {
+  esc <- htmltools::htmlEscape
+  ifelse(
+    is.na(code),
+    "n/a",
+    ifelse(is.na(name), esc(code), paste0(esc(name), " (", esc(code), ")"))
+  )
+}
+
 aircraft_popup <- function(df) {
   fmt <- function(x, unit, digits = 0) {
     ifelse(is.na(x), "n/a", paste(comma(round(x, digits)), unit))
@@ -156,7 +168,8 @@ aircraft_popup <- function(df) {
   esc <- function(x) htmltools::htmlEscape(ifelse(is.na(x), "n/a", x))
   paste0(
     "<b>", esc(df$callsign), "</b>",
-    "<br>Airline code: ", esc(df$airline_code),
+    "<br>Airline: ", airline_label(df$airline_name, df$airline_code),
+    "<br>Category: ", esc(as.character(df$flight_category)),
     "<br>Origin country: ", esc(df$origin_country),
     "<br>Altitude: ", ifelse(df$on_ground %in% TRUE, "on ground", fmt(df$altitude, "m")),
     "<br>Speed: ", fmt(df$velocity * 3.6, "km/h"),
