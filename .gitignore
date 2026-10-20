@@ -13,3 +13,6 @@ cache/
 # renv library (lockfile is committed)
 renv/library/
 renv/staging/
+
+# Local notes for Claude Code
+CLAUDE.md

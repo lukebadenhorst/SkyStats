@@ -2,7 +2,7 @@
 
 An R Shiny dashboard of global air traffic for STAT3037A Introduction to Spatial Statistics (Wits). It shows live aircraft positions from the [OpenSky Network](https://opensky-network.org) and will let the user run three spatial statistics methods from the course on them.
 
-**Status: demo.** The Live Map works end to end. The method tabs (Autocorrelation, Point Patterns, Spatial Regression) and Airports & Routes show their planned controls and outputs but cannot run yet. See `docs/superpowers/specs/` for the full design.
+**Status: demo.** The Live Map works end to end. The method tabs (Autocorrelation, Point Patterns, Spatial Regression) and Airports & Routes show their planned controls and outputs but cannot run yet. See `docs/design.md` for the full design.
 
 ## Run it
 

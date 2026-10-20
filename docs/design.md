@@ -3,7 +3,7 @@
 - **Date:** 2026-10-06
 - **Course:** STAT3037A Introduction to Spatial Statistics (Wits), group assignment, 25% of class mark
 - **Due:** 26 October 2026
-- **Inputs:** `context/instructions.md` (assignment brief), `context/course_notes.md` (lecture notes), `plan/flight-dashboard-plan.md` (earlier draft plan; this spec supersedes it where they differ)
+- **Inputs:** `context/instructions.md` (assignment brief), `context/course_notes.md` (lecture notes)
 
 ---
 
@@ -54,7 +54,7 @@ The free standard account gives 4,000 credits/day per endpoint bucket. The budge
 
 ### 2.2 Authentication
 
-- OAuth2 client credentials only, using `httr2::req_oauth_client_credentials()`. The token URL is in `plan/flight-dashboard-plan.md` §3.
+- OAuth2 client credentials only, using `httr2::req_oauth_client_credentials()`. The token URL is `opensky_token_url` in `R/data_api.R`.
 - Credentials are read from `OPENSKY_CLIENT_ID` / `OPENSKY_CLIENT_SECRET` in `.Renviron`. That file is git-ignored and never committed. When hosted, they are set as platform secrets.
 - If the credentials are missing, the app runs in sample mode without error.
 
@@ -229,7 +229,7 @@ STAT3037A_dashboard/
 │   ├── sample/              committed
 │   └── frozen/              committed only when a frozen snapshot is used in the write-up
 ├── tests/testthat/
-├── context/, plan/, docs/   brief, notes, plans, specs
+├── context/, docs/         brief, notes, design spec
 ├── .Renviron                git-ignored
 └── README.md                setup, credentials, run instructions
 ```
