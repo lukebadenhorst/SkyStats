@@ -195,15 +195,16 @@ autocorr_server <- function(id, aircraft, region_id) {
     output$scatter <- renderPlot({
       res <- ok_result()
       s <- res$scatter
+      pal <- use_plot_theme()
       par(mar = c(4.5, 4.5, 1, 1))
       plot(
         s$value, s$lag,
         pch = 21, bg = lisa_colours[as.character(res$lisa$cluster)], col = "#555555",
         xlab = res$value_label, ylab = "Spatially lagged value"
       )
-      abline(stats::lm(lag ~ value, data = s), col = "#1d3557", lwd = 2)
+      abline(stats::lm(lag ~ value, data = s), col = pal$line, lwd = 2)
       abline(v = mean(s$value), h = mean(s$lag), lty = 2, col = "#888888")
-    })
+    }, bg = "transparent")
 
     output$map <- leaflet::renderLeaflet({
       lisa <- sf::st_transform(ok_result()$lisa, 4326)

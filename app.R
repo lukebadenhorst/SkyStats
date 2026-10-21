@@ -17,6 +17,22 @@ theme <- bs_theme(
   "navbar-bg" = "#1d3557"
 )
 
+# Dark mode (the sun/moon switch in the navbar). Bootstrap themes the page;
+# these rules handle the Leaflet maps. Inverting the light basemap tiles gives
+# a dark basemap without loading a second tile set.
+theme <- bs_add_rules(
+  theme,
+  '[data-bs-theme="dark"] {
+    .leaflet-container { background: #1a1a1a; }
+    .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9); }
+    .leaflet-bar a, .info.legend, .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+      background: var(--bs-body-bg);
+      color: var(--bs-body-color);
+    }
+    .study-window { stroke: #a8dadc; }
+  }'
+)
+
 sidebar_filters <- sidebar(
   title = "Filters",
   width = 280,
@@ -61,7 +77,9 @@ ui <- page_navbar(
   nav_panel("Spatial Regression", icon = bs_icon("graph-up"), regression_ui("regression")),
   nav_panel("About", icon = bs_icon("info-circle"), about_ui("about")),
   nav_spacer(),
-  nav_item(uiOutput("source_badge"))
+  nav_item(uiOutput("source_badge")),
+  # Opens in light mode (clearer on a projector); the switch flips it.
+  nav_item(input_dark_mode(id = "dark_mode", mode = "light"))
 )
 
 server <- function(input, output, session) {

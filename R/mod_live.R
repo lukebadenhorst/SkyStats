@@ -8,7 +8,8 @@ altitude_colours <- c(
   "On ground" = "#9aa0a6",
   "< 3,000 m" = "#f4a261",
   "3,000-9,000 m" = "#2a9d8f",
-  "> 9,000 m" = "#1d3557",
+  # Indigo rather than the theme navy, so it shows on the dark basemap too.
+  "> 9,000 m" = "#5e60ce",
   "Unknown" = "#d0d0d0"
 )
 altitude_palette <- leaflet::colorFactor(
@@ -38,8 +39,7 @@ mod_live_ui <- function(id) {
         title = "Top origin countries",
         value = textOutput(ns("top_country")),
         uiOutput(ns("top_countries")),
-        showcase = bs_icon("globe2"),
-        theme = "light"
+        showcase = bs_icon("globe2")
       )
     ),
     navset_card_tab(
