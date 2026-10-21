@@ -10,6 +10,8 @@
 
 **Spec:** `docs/design.md`. Read it with this plan. Where they differ, this plan wins; the differences are listed under "Scope for 26 Oct".
 
+**Progress:** the checkboxes below show what is done. `STATE.md` in the project root summarises the current state, what is left and what changed while building.
+
 ---
 
 ## Scope for 26 Oct
@@ -96,7 +98,7 @@ Each person works on their own branch (`git switch -c autocorr`, and so on) and 
   - `result_alert(res)`: `NULL` when `res$ok`, else `div(class = "alert alert-warning", res$message)`.
   - Keep the old `disabled_run_button()` and the placeholder layout in `R/mod_placeholders.R` (rename it `placeholder_tab_ui()`) so the tabs not yet built still render.
 
-- [ ] **Step 1: Write the failing tests** in `tests/testthat/test-stats_common.R`
+- [x] **Step 1: Write the failing tests** in `tests/testthat/test-stats_common.R`
 
 ```r
 test_that("stop_user signals a user_error", {
@@ -118,19 +120,19 @@ test_that("p-values and decisions are worded consistently", {
 })
 ```
 
-- [ ] **Step 2: Update `helper-source.R`, then run the tests and check they fail**
+- [x] **Step 2: Update `helper-source.R`, then run the tests and check they fail**
 
 Run: `testthat::test_file("tests/testthat/test-stats_common.R")`
 Expected: FAIL, `could not find function "stop_user"`.
 
-- [ ] **Step 3: Implement `R/stats_common.R` and `R/mod_common.R`, and edit `R/mod_placeholders.R`**
+- [x] **Step 3: Implement `R/stats_common.R` and `R/mod_common.R`, and edit `R/mod_placeholders.R`**
 
-- [ ] **Step 4: Run all tests and start the app**
+- [x] **Step 4: Run all tests and start the app**
 
 Run: `testthat::test_dir("tests/testthat")`. Expected: all pass (60 old + the new ones).
 Run: `shiny::runApp()`. Expected: the app opens and every tab still renders.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add R/stats_common.R R/mod_common.R R/mod_placeholders.R tests/testthat/ README.md
@@ -154,7 +156,7 @@ git commit -m "Add shared helpers for the method tabs"
   - `region_window(region_id)` → `sf::st_transform(region_polygon(region_id), region_crs(region_id))`.
   - `to_region_sf(df, region_id)` → `sf` POINTs in the region CRS, built from the `longitude`/`latitude` columns after `crop_to_region()`. All other columns are kept, and zero rows is allowed.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```r
 test_that("region_polygon follows the bbox with dense edges", {
@@ -188,15 +190,15 @@ test_that("regression is allowed only in Europe and World", {
 })
 ```
 
-- [ ] **Step 2: Run to check they fail**
+- [x] **Step 2: Run to check they fail**
 
 Run: `testthat::test_file("tests/testthat/test-regions.R")`. Expected: FAIL, `could not find function "region_polygon"`.
 
-- [ ] **Step 3: Implement the four functions and change `allow_regression`**
+- [x] **Step 3: Implement the four functions and change `allow_regression`**
 
-- [ ] **Step 4: Run all tests.** Expected: all pass.
+- [x] **Step 4: Run all tests.** Expected: all pass.
 
-- [ ] **Step 5: Commit** (`git commit -m "Add region polygons, windows and projected points"`)
+- [x] **Step 5: Commit** (`git commit -m "Add region polygons, windows and projected points"`)
 
 ---
 
@@ -218,7 +220,7 @@ Run: `testthat::test_file("tests/testthat/test-regions.R")`. Expected: FAIL, `co
   - `n_isolates = sum(spdep::card(nb) == 0)`.
   - `label`, for example `"Queen contiguity, style W"`, `"6 nearest neighbours, style W"`, `"Distance band 300 km, style B"`, `"Inverse distance within 300 km, style W"`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```r
 nc <- sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
@@ -252,10 +254,10 @@ test_that("queen on points is refused, and islands are counted", {
 
 (The nc nearest-neighbour maximum is 41.03 km, so the message says 42.)
 
-- [ ] **Step 2: Run to check they fail.** Expected: `could not find function "build_weights"`.
-- [ ] **Step 3: Implement `build_weights()`.**
-- [ ] **Step 4: Run all tests.** Expected: all pass.
-- [ ] **Step 5: Commit** (`git commit -m "Add build_weights for all four weight types"`)
+- [x] **Step 2: Run to check they fail.** Expected: `could not find function "build_weights"`.
+- [x] **Step 3: Implement `build_weights()`.**
+- [x] **Step 4: Run all tests.** Expected: all pass.
+- [x] **Step 5: Commit** (`git commit -m "Add build_weights for all four weight types"`)
 
 ---
 
@@ -280,7 +282,7 @@ test_that("queen on points is refused, and islands are counted", {
     - all values equal: `"Every hex has the same value, so autocorrelation can't be measured. Change the filters or the hex size."`
     - `globalg` with `perm`: `"Permutation inference isn't available for Global G. Use analytic."`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```r
 nc <- sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
@@ -335,10 +337,10 @@ test_that("too few hexes or constant values give a user message", {
 })
 ```
 
-- [ ] **Step 2: Run to check they fail.** Expected: `could not find function "run_autocorr"`.
-- [ ] **Step 3: Implement `hex_counts()` and `run_autocorr()`.**
-- [ ] **Step 4: Run all tests.** Expected: all pass.
-- [ ] **Step 5: Commit** (`git commit -m "Add autocorrelation statistics with LISA"`)
+- [x] **Step 2: Run to check they fail.** Expected: `could not find function "run_autocorr"`.
+- [x] **Step 3: Implement `hex_counts()` and `run_autocorr()`.**
+- [x] **Step 4: Run all tests.** Expected: all pass.
+- [x] **Step 5: Commit** (`git commit -m "Add autocorrelation statistics with LISA"`)
 
 ---
 
@@ -352,7 +354,7 @@ test_that("too few hexes or constant values give a user message", {
 - Consumes: `method_tab_ui()`, `alpha_input()`, `result_alert()`, `run_safely()`, `to_region_sf()`, `region_window()`, `hex_counts()`, `run_autocorr()`.
 - Produces: `autocorr_ui(id)` and `autocorr_server(id, aircraft, region_id)`, where `aircraft` is the app's filtered-states reactive and `region_id` is `reactive(input$region)`. Inside the server, `result` is the `bindEvent(reactive(run_safely(...)), input$run)` value; the test reads it.
 
-- [ ] **Step 1: Write the failing module test**
+- [x] **Step 1: Write the failing module test**
 
 ```r
 library(shiny)
@@ -375,17 +377,17 @@ test_that("the tab runs Moran's I on the sample in Europe and refuses World", {
 })
 ```
 
-- [ ] **Step 2: Run to check it fails.** Expected: `could not find function "autocorr_server"`.
-- [ ] **Step 3: Build the UI**, keeping the existing controls from the placeholder. Wrap the Permutation choice so it is hidden when `input.statistic == 'globalg'`. The `results` area holds:
+- [x] **Step 2: Run to check it fails.** Expected: `could not find function "autocorr_server"`.
+- [x] **Step 3: Build the UI**, keeping the existing controls from the placeholder. Wrap the Permutation choice so it is hidden when `input.statistic == 'globalg'`. The `results` area holds:
   - the interpretation and `result_alert()`;
   - the global test table;
   - a LISA leaflet map (hexes transformed to 4326; colours HH `#d7191c`, LL `#2c7bb6`, HL `#fdae61`, LH `#abd9e9`, NS `#eeeeee`);
   - a Moran scatterplot (`renderPlot`: `plot(value, lag)` with the `lm` line and dashed mean lines);
   - a table of the 10 significant hexes with the largest `Ii`.
-- [ ] **Step 4: Build the server.** The pipeline is `to_region_sf(aircraft(), region_id())` → `hex_counts(pts, region_window(region_id()), input$hex_km, input$log)` → `run_autocorr(...)`, all inside `run_safely()`, with `alpha = as.numeric(input$alpha)`. Show a progress message while it runs.
-- [ ] **Step 5: Wire it up.** Add `autocorr_server("autocorr", aircraft = aircraft, region_id = reactive(input$region))` to `app.R`, and delete `autocorr_ui` from `R/mod_placeholders.R`.
-- [ ] **Step 6: Run all tests, then check by hand.** Run `shiny::runApp()` in sample mode, choose Region Europe, keep the defaults and click Run. Expected: a table, map and scatterplot, and an interpretation that mentions Moran's I. With Region World, Run shows the yellow message.
-- [ ] **Step 7: Commit** (`git commit -m "Build the Autocorrelation tab"`)
+- [x] **Step 4: Build the server.** The pipeline is `to_region_sf(aircraft(), region_id())` → `hex_counts(pts, region_window(region_id()), input$hex_km, input$log)` → `run_autocorr(...)`, all inside `run_safely()`, with `alpha = as.numeric(input$alpha)`. Show a progress message while it runs.
+- [x] **Step 5: Wire it up.** Add `autocorr_server("autocorr", aircraft = aircraft, region_id = reactive(input$region))` to `app.R`, and delete `autocorr_ui` from `R/mod_placeholders.R`.
+- [x] **Step 6: Run all tests, then check by hand.** Run `shiny::runApp()` in sample mode, choose Region Europe, keep the defaults and click Run. Expected: a table, map and scatterplot, and an interpretation that mentions Moran's I. With Region World, Run shows the yellow message.
+- [x] **Step 7: Commit** (`git commit -m "Build the Autocorrelation tab"`)
 
 ---
 
@@ -409,7 +411,7 @@ test_that("the tab runs Moran's I on the sample in Europe and refuses World", {
     - fewer than 30 points: `"Only <n> points in this region. At least 30 are needed; widen the filters."`
     - `min(expected) < 5`: `"Some quadrats expect fewer than 5 points (smallest: <x.x>). Use fewer quadrats."`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```r
 data(bei, package = "spatstat.data")
@@ -453,10 +455,10 @@ test_that("as_ppp drops points outside the window", {
 
 (`spatstat.random` is installed with `spatstat`.)
 
-- [ ] **Step 2: Run to check they fail.** Expected: `could not find function "run_quadrat"`.
-- [ ] **Step 3: Implement `as_ppp()` and `run_quadrat()`.**
-- [ ] **Step 4: Run all tests.** Expected: all pass.
-- [ ] **Step 5: Commit** (`git commit -m "Add quadrat test and VTMR"`)
+- [x] **Step 2: Run to check they fail.** Expected: `could not find function "run_quadrat"`.
+- [x] **Step 3: Implement `as_ppp()` and `run_quadrat()`.**
+- [x] **Step 4: Run all tests.** Expected: all pass.
+- [x] **Step 5: Commit** (`git commit -m "Add quadrat test and VTMR"`)
 
 ---
 
@@ -470,18 +472,18 @@ test_that("as_ppp drops points outside the window", {
 - Consumes: Task 1 helpers, `to_region_sf()`, `region_window()`, `region_crs()`, `quadrat_window()`, `as_ppp()`, `run_quadrat()`. Build the pattern with `as_ppp(points, quadrat_window(region_window(region)))`, not the region window itself (see the last row of the table under "Scope for 26 Oct"). On the map, draw the rectangle's outline so it is clear which area was tested. `load_airports()` comes from Task 8: until Task 8 is merged, pass an empty data.frame. The airport option then shows "Only 0 points…", which is fine.
 - Produces: `quadrat_ui(id)` and `quadrat_server(id, aircraft, region_id, airports)`, where `airports` is a data.frame with `longitude`, `latitude` and `type`. Inside the server, `result` is the `bindEvent`'d `run_safely()` value.
 
-- [ ] **Step 1: Write the failing module test** (same pattern as Task 5). Use the sample in Europe with `points = "aircraft"`, `nx = 6`, `ny = 6`, `alpha = "0.05"`, `run = 1`, and expect `result()$ok`. Then set `nx = 15`, `ny = 15` with `points = "airports"` and an `airports` argument of `data.frame(longitude = 10, latitude = 50, type = "large_airport")`, and expect `result()$message` to match `"^Only 1 points"`.
-- [ ] **Step 2: Run to check it fails.**
-- [ ] **Step 3: Build the UI and server.**
+- [x] **Step 1: Write the failing module test** (same pattern as Task 5). Use the sample in Europe with `points = "aircraft"`, `nx = 6`, `ny = 6`, `alpha = "0.05"`, `run = 1`, and expect `result()$ok`. Then set `nx = 15`, `ny = 15` with `points = "airports"` and an `airports` argument of `data.frame(longitude = 10, latitude = 50, type = "large_airport")`, and expect `result()$message` to match `"^Only 1 points"`.
+- [x] **Step 2: Run to check it fails.**
+- [x] **Step 3: Build the UI and server.**
   - Point set "Airborne aircraft" uses `aircraft()[aircraft()$airborne, ]`. "Airports" uses `airports[airports$type %in% input$airport_types, ]`. Under the airport option, show a note: "Airline, category and altitude filters don't apply to airports."
   - Outputs:
     - the interpretation and `result_alert()`;
     - a χ² table and a VTMR table;
     - a leaflet map of the tiles (transformed to 4326, filled with `colorNumeric("viridis", count)` and labelled with the count) with the points on top;
     - a histogram of the counts (`renderPlot`), with the Poisson expectation `m * dpois(0:max(count), mean)` drawn as points joined by a line.
-- [ ] **Step 4: Wire it up.** Add `quadrat_server("quadrat", aircraft = aircraft, region_id = reactive(input$region), airports = airports)` to `app.R`. Add `airports <- load_airports()` at the top of `app.R` if Task 8 has landed; otherwise use `airports <- data.frame(longitude = numeric(), latitude = numeric(), type = character())` for now. Delete `quadrat_ui` from the placeholders.
-- [ ] **Step 5: Run all tests and check by hand** (Europe, defaults, Run). Expected: a map of tiles, two tables, a histogram and the interpretation. Setting nx = ny = 15 in Southern Africa with few aircraft shows the "fewer than 5" message.
-- [ ] **Step 6: Commit** (`git commit -m "Build the Point Patterns tab"`)
+- [x] **Step 4: Wire it up.** Add `quadrat_server("quadrat", aircraft = aircraft, region_id = reactive(input$region), airports = airports)` to `app.R`. Add `airports <- load_airports()` at the top of `app.R` if Task 8 has landed; otherwise use `airports <- data.frame(longitude = numeric(), latitude = numeric(), type = character())` for now. Delete `quadrat_ui` from the placeholders.
+- [x] **Step 5: Run all tests and check by hand** (Europe, defaults, Run). Expected: a map of tiles, two tables, a histogram and the interpretation. Setting nx = ny = 15 in Southern Africa with few aircraft shows the "fewer than 5" message.
+- [x] **Step 6: Commit** (`git commit -m "Build the Point Patterns tab"`)
 
 ---
 
@@ -497,7 +499,7 @@ test_that("as_ppp drops points outside the window", {
   - `load_airports(path = airports_path)` → data.frame with `ident`, `type` (`"large_airport"` or `"medium_airport"`), `name`, `latitude`, `longitude` and `iso_country`. If the file is missing, it returns a zero-row data.frame with those columns.
   - In `build_lookups.R`, read `https://davidmegginson.github.io/ourairports-data/airports.csv` with `read.csv(..., na.strings = "")`. **Not** the default, which turns Namibia's `"NA"` into a missing value. Keep only large and medium airports, rename `latitude_deg`/`longitude_deg`, and save with `compress = "xz"`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```r
 test_that("the airport lookup keeps large and medium airports", {
@@ -519,10 +521,10 @@ test_that("a missing airport file gives an empty table", {
 })
 ```
 
-- [ ] **Step 2: Run to check they fail.**
-- [ ] **Step 3: Implement it.** Then run `Rscript data-raw/build_lookups.R`, or `source("data-raw/build_lookups.R")` in the console. This needs internet but no OpenSky credits.
-- [ ] **Step 4: Run all tests.** Expected: all pass. The file should be under 1 MB.
-- [ ] **Step 5: Commit** (`git add data/lookups/airports.rds ...`; `git commit -m "Add the OurAirports lookup"`)
+- [x] **Step 2: Run to check they fail.**
+- [x] **Step 3: Implement it.** Then run `Rscript data-raw/build_lookups.R`, or `source("data-raw/build_lookups.R")` in the console. This needs internet but no OpenSky credits.
+- [x] **Step 4: Run all tests.** Expected: all pass. The file should be under 1 MB.
+- [x] **Step 5: Commit** (`git add data/lookups/airports.rds ...`; `git commit -m "Add the OurAirports lookup"`)
 
 ---
 
@@ -560,7 +562,7 @@ test_that("a missing airport file gives an empty table", {
     - `spData::world` has no `pop` or `gdpPercap` for France and Norway (and no `gdpPercap` for Syria), so with those covariates Europe runs on 40 of its 44 countries.
     - The two test fixes below (`sf::st_as_sf()` around `merge()`, and `which()` because Northern Cyprus's `iso_a2` is NA) are in `tests/testthat/test-stats_regression.R`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```r
 wb <- merge(spData::world, spData::worldbank_df, by = "iso_a2")
@@ -613,10 +615,10 @@ test_that("queen weights in Europe run despite the islands", {
 })
 ```
 
-- [ ] **Step 2: Run to check they fail.** Expected: `could not find function "run_regression"`.
-- [ ] **Step 3: Implement the three functions.**
-- [ ] **Step 4: Run all tests.** Expected: all pass.
-- [ ] **Step 5: Commit** (`git commit -m "Add the spatial regression workflow"`)
+- [x] **Step 2: Run to check they fail.** Expected: `could not find function "run_regression"`.
+- [x] **Step 3: Implement the three functions.**
+- [x] **Step 4: Run all tests.** Expected: all pass.
+- [x] **Step 5: Commit** (`git commit -m "Add the spatial regression workflow"`)
 
 ---
 
@@ -630,9 +632,9 @@ test_that("queen weights in Europe run despite the islands", {
 - Consumes: Task 1 helpers, `country_units()`, `regression_formula()`, `run_regression()`.
 - Produces: `regression_ui(id)` and `regression_server(id, aircraft, region_id, airports)`. Inside the server, `result` is the `bindEvent`'d `run_safely()` value.
 
-- [ ] **Step 1: Write the failing module test** (same pattern as Task 5). On the sample in Europe, set `covariates = c("pop", "gdpPercap")`, `log_y = TRUE`, `weights = "knn"`, `k = 4`, `alpha = "0.05"`, `run = 1`, and expect `result()$ok` and `result()$value$n >= 15`. Then set the region to `"north_america"`, run again, and expect the "only available for Europe" message.
-- [ ] **Step 2: Run to check it fails.**
-- [ ] **Step 3: Build the UI and server.** Drop the "Flights departing yesterday" response choice; the response is "Aircraft over the country now" (stretch S1 brings departures back). Show the outputs as five numbered cards matching the course workflow:
+- [x] **Step 1: Write the failing module test** (same pattern as Task 5). On the sample in Europe, set `covariates = c("pop", "gdpPercap")`, `log_y = TRUE`, `weights = "knn"`, `k = 4`, `alpha = "0.05"`, `run = 1`, and expect `result()$ok` and `result()$value$n >= 15`. Then set the region to `"north_america"`, run again, and expect the "only available for Europe" message.
+- [x] **Step 2: Run to check it fails.**
+- [x] **Step 3: Build the UI and server.** Drop the "Flights departing yesterday" response choice; the response is "Aircraft over the country now" (stretch S1 brings departures back). Show the outputs as five numbered cards matching the course workflow:
   1. the OLS table and R²;
   2. the residual Moran table;
   3. the LM test table, with the recommendation as a badge;
@@ -640,9 +642,9 @@ test_that("queen weights in Europe run despite the islands", {
   5. a residual map (leaflet, transformed to 4326, `colorBin("RdBu", reverse = TRUE)`), with a radio to switch between OLS and lag residuals.
 
   Put the interpretation and `result_alert()` above the cards. If `n_isolates > 0` under queen weights, add a note: "<n> countries have no land neighbours. Try K nearest neighbours."
-- [ ] **Step 4: Wire it up.** Add `regression_server("regression", aircraft = aircraft, region_id = reactive(input$region), airports = airports)`.
-- [ ] **Step 5: Run all tests and check by hand** (Europe, then World, in sample mode).
-- [ ] **Step 6: Commit** (`git commit -m "Build the Spatial Regression tab"`)
+- [x] **Step 4: Wire it up.** Add `regression_server("regression", aircraft = aircraft, region_id = reactive(input$region), airports = airports)`.
+- [x] **Step 5: Run all tests and check by hand** (Europe, then World, in sample mode).
+- [x] **Step 6: Commit** (`git commit -m "Build the Spatial Regression tab"`)
 
 ---
 
@@ -711,7 +713,7 @@ test_that("every shortcut names a real tab", {
 - Create: `R/mod_about.R` (move `about_ui` here from the placeholders and rewrite it)
 - Modify: `app.R`, `README.md`; delete `R/mod_placeholders.R` once only `routes_ui` is left in it, and remove the Airports & Routes `nav_panel` unless stretch S1 is done.
 
-- [ ] **Step 1: Rewrite the About page.**
+- [x] **Step 1: Rewrite the About page.**
   - Data sources: OpenSky, the sample, OpenFlights, OurAirports, `spData::world`.
   - Methods: one paragraph each, naming the chapter and the R functions used.
   - Limitations: the existing ones plus:
@@ -719,10 +721,10 @@ test_that("every shortcut names a real tab", {
     - Regression is limited to Europe and World.
     - Each analysis is a single snapshot.
   - Remove the "About this demo" card.
-- [ ] **Step 2: Fix the sidebar text.** It becomes "Live data refreshes every 10 minutes. Filters apply to every tab; airport points ignore the airline, category and altitude filters." Also remove "(demo)" from the `app.R` header comment.
-- [ ] **Step 3: Update the README.** Change the status line (method tabs working), the package list, and the layout table (new `stats_*`, `mod_*` and lookup files). Add one paragraph on how to run each method.
-- [ ] **Step 4: Run all tests and open every tab.** Expected: all pass, and no tab mentions "demo", "coming soon" or "owner".
-- [ ] **Step 5: Commit** (`git commit -m "Finish the About page and README"`)
+- [x] **Step 2: Fix the sidebar text.** It becomes "Live data refreshes every 10 minutes. Filters apply to every tab; airport points ignore the airline, category and altitude filters." Also remove "(demo)" from the `app.R` header comment.
+- [x] **Step 3: Update the README.** Change the status line (method tabs working), the package list, and the layout table (new `stats_*`, `mod_*` and lookup files). Add one paragraph on how to run each method.
+- [x] **Step 4: Run all tests and open every tab.** Expected: all pass, and no tab mentions "demo", "coming soon" or "owner".
+- [x] **Step 5: Commit** (`git commit -m "Finish the About page and README"`)
 
 ---
 
