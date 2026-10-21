@@ -65,62 +65,6 @@ routes_ui <- function(id) {
   )
 }
 
-regression_ui <- function(id) {
-  placeholder_tab_ui(
-    id,
-    chapter = "Ch 6",
-    summary = p(
-      strong("Spatial lag regression."),
-      " Models air traffic per country from population, GDP per capita, area and ",
-      "airport count. Follows the course workflow: OLS, Moran's I on the residuals, ",
-      "LM tests to choose a model, then a spatial lag model (lagsarlm)."
-    ),
-    controls = function(ns) {
-      tagList(
-        radioButtons(
-          ns("response"),
-          "Response",
-          c(
-            "Flights departing yesterday" = "departures",
-            "Aircraft over the country now" = "present"
-          )
-        ),
-        checkboxInput(ns("log_y"), "Use log(1 + y)", value = TRUE),
-        checkboxGroupInput(
-          ns("covariates"),
-          "Covariates",
-          c(
-            "Population" = "pop",
-            "GDP per capita" = "gdpPercap",
-            "Area" = "area_km2",
-            "Airport count" = "airports"
-          ),
-          selected = c("pop", "gdpPercap")
-        ),
-        radioButtons(
-          ns("weights"),
-          "Spatial weights",
-          c("Queen contiguity" = "queen", "K nearest neighbours" = "knn"),
-          inline = TRUE
-        ),
-        conditionalPanel(
-          "input.weights == 'knn'",
-          ns = ns,
-          numericInput(ns("k"), "k", value = 4, min = 1, max = 10)
-        ),
-        alpha_input(ns)
-      )
-    },
-    outputs = list(
-      "1. OLS summary",
-      "2. Moran's I on the OLS residuals",
-      "3. LM tests (LMerr, LMlag, RLMerr, RLMlag) and a recommended model",
-      "4. Spatial lag model: rho, coefficients, AIC against OLS",
-      "5. Map of the residuals"
-    )
-  )
-}
-
 about_ui <- function(id) {
   layout_columns(
     col_widths = c(6, 6),
