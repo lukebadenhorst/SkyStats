@@ -8,9 +8,7 @@ library(leaflet)
 
 poll_ms <- 10 * 60 * 1000
 airlines <- load_airlines()
-# Until the OurAirports lookup lands (Task 8), the Point Patterns tab has no
-# airports, so the airport option shows "Only 0 points...".
-airports <- data.frame(longitude = numeric(), latitude = numeric(), type = character())
+airports <- load_airports()
 
 theme <- bs_theme(
   version = 5,
