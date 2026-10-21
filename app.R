@@ -22,7 +22,12 @@ theme <- bs_theme(
 # a dark basemap without loading a second tile set.
 theme <- bs_add_rules(
   theme,
-  '[data-bs-theme="dark"] {
+  '/* The switch defaults to dark grey; make it white on the navy navbar. */
+  bslib-input-dark-mode {
+    --text-1-light: #ffffff;
+    --text-2-light: rgba(255, 255, 255, 0.85);
+  }
+  [data-bs-theme="dark"] {
     .leaflet-container { background: #1a1a1a; }
     .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9); }
     .leaflet-bar a, .info.legend, .leaflet-popup-content-wrapper, .leaflet-popup-tip {
