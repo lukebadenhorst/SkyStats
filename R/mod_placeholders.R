@@ -1,6 +1,8 @@
-# Skeleton tabs for the demo. Each shows the real parameter controls from the
-# design spec with Run disabled, a card describing the method, and an owner
-# line for splitting the work. UI only: there is no server logic yet.
+# Skeleton tabs for the tabs not built yet. Each shows the real parameter
+# controls from the design spec with Run disabled, a card describing the
+# method, and an owner line. UI only: there is no server logic. Each tab's
+# function is deleted here once its real module exists (see docs/plan.md).
+# method_tab_ui() and alpha_input() for the real tabs are in R/mod_common.R.
 
 disabled_run_button <- function(id) {
   tagAppendAttributes(
@@ -9,8 +11,8 @@ disabled_run_button <- function(id) {
   )
 }
 
-# Shared layout: parameters on the left, method + planned outputs on the right.
-method_tab_ui <- function(id, chapter, summary, controls, outputs, owner = "TBD") {
+# Placeholder layout: parameters on the left, method + planned outputs on the right.
+placeholder_tab_ui <- function(id, chapter, summary, controls, outputs, owner = "TBD") {
   ns <- NS(id)
   layout_columns(
     col_widths = c(4, 8),
@@ -40,12 +42,8 @@ method_tab_ui <- function(id, chapter, summary, controls, outputs, owner = "TBD"
   )
 }
 
-alpha_input <- function(ns) {
-  selectInput(ns("alpha"), "Significance level (alpha)", c(0.10, 0.05, 0.01), selected = 0.05)
-}
-
 routes_ui <- function(id) {
-  method_tab_ui(
+  placeholder_tab_ui(
     id,
     chapter = "Descriptive",
     summary = p(
@@ -68,7 +66,7 @@ routes_ui <- function(id) {
 }
 
 autocorr_ui <- function(id) {
-  method_tab_ui(
+  placeholder_tab_ui(
     id,
     chapter = "Ch 4",
     summary = tagList(
@@ -139,7 +137,7 @@ autocorr_ui <- function(id) {
 }
 
 quadrat_ui <- function(id) {
-  method_tab_ui(
+  placeholder_tab_ui(
     id,
     chapter = "Ch 7",
     summary = p(
@@ -181,7 +179,7 @@ quadrat_ui <- function(id) {
 }
 
 regression_ui <- function(id) {
-  method_tab_ui(
+  placeholder_tab_ui(
     id,
     chapter = "Ch 6",
     summary = p(

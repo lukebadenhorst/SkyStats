@@ -11,7 +11,8 @@ An R Shiny dashboard of global air traffic for STAT3037A Introduction to Spatial
    ```r
    install.packages(c(
      "shiny", "bslib", "bsicons", "leaflet", "cachem", "DT",
-     "httr2", "dplyr", "jsonlite", "testthat"
+     "httr2", "dplyr", "jsonlite", "testthat",
+     "sf", "spdep", "spatialreg", "spatstat", "spData"
    ))
    ```
 
