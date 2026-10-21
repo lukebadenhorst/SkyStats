@@ -65,48 +65,6 @@ routes_ui <- function(id) {
   )
 }
 
-quadrat_ui <- function(id) {
-  placeholder_tab_ui(
-    id,
-    chapter = "Ch 7",
-    summary = p(
-      strong("Quadrat test for complete spatial randomness (CSR)."),
-      " Splits the region into an nx by ny grid of quadrats, counts points in each, ",
-      "and tests the counts against a Poisson process with the chi-squared test and ",
-      "the variance-to-mean ratio (VTMR: < 1 regular, about 1 random, > 1 clustered)."
-    ),
-    controls = function(ns) {
-      tagList(
-        radioButtons(
-          ns("points"),
-          "Point set",
-          c("Airborne aircraft" = "aircraft", "Airports" = "airports")
-        ),
-        conditionalPanel(
-          "input.points == 'airports'",
-          ns = ns,
-          checkboxGroupInput(
-            ns("airport_types"),
-            "Airport types",
-            c("Large" = "large_airport", "Medium" = "medium_airport"),
-            selected = c("large_airport", "medium_airport")
-          )
-        ),
-        sliderInput(ns("nx"), "Quadrats across (nx)", min = 2, max = 15, value = 6),
-        sliderInput(ns("ny"), "Quadrats down (ny)", min = 2, max = 15, value = 6),
-        alpha_input(ns)
-      )
-    },
-    outputs = list(
-      "Quadrat count map with the points overlaid",
-      "Chi-squared test: statistic, df, p-value",
-      "VTMR and the (m - 1) x VTMR statistic against chi-squared(m - 1)",
-      "Histogram of quadrat counts against the Poisson expectation",
-      "Plain-English interpretation at the chosen alpha"
-    )
-  )
-}
-
 regression_ui <- function(id) {
   placeholder_tab_ui(
     id,
