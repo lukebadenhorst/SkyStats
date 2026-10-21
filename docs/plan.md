@@ -32,6 +32,7 @@ Six days are left, so the plan builds the three methods first. Everything else i
 | `R/interpret.R` (§4) | Each `run_*()` returns its own `interpretation`; shared wording helpers live in `R/stats_common.R` | Keeps each method in one file per owner |
 | Patch `-99` ISO codes (§2.6) | Not needed | In spData 2.3.5 only Northern Cyprus and Somaliland lack `iso_a2` |
 | Permutation inference for every statistic (§3.4) | Analytic only for Global G | spdep has no `globalG.mc` |
+| Quadrat test over the region window (§3.5) | Over `quadrat_window()`, the largest rectangle inside the region | A grid over the curved projected region has tiny clipped edge tiles. They fail the expected-count check (North America at 6 × 6, East Asia above 2 × 2) and make the VTMR report clustering for random points, because the notes' VTMR assumes equal quadrats. Found while building Task 6 |
 
 ## Global Constraints
 
@@ -397,11 +398,12 @@ test_that("the tab runs Moran's I on the sample in Europe and refuses World", {
 **Interfaces:**
 - Consumes: `stop_user()`, `format_p()`, `decision_text()`.
 - Produces:
+  - `quadrat_window(window)` → `sfc` POLYGON: the largest axis-aligned rectangle (found by search) inside a projected region window, in the same CRS. Every quadrat over it has the same area. It keeps 57–63% of each region's area but most aircraft (95% in Europe, 98% in North America, 67% in East Asia for the sample).
   - `as_ppp(points, window)` (`points` is `sf` or `sfc`) → `spatstat.geom::ppp`, with the window `spatstat.geom::as.owin(window)` (coordinates in metres). Points outside the window are dropped first with `spatstat.geom::inside.owin()`, so `ppp()` never warns.
   - `run_quadrat(X, nx = 6, ny = 6, alpha = 0.05, crs = NA)` → list:
     - `chisq`: data.frame with `statistic`, `df`, `p_value` from `spatstat.explore::quadrat.test(X, nx = nx, ny = ny)`, wrapped in `suppressWarnings()` because the app does its own expected-count check.
     - `vtmr`: data.frame with `m`, `mean`, `variance`, `vtmr`, `statistic`, `df`, `p_value`. The counts are `as.vector(quadratcount(X, nx, ny))` and `m` is how many there are (tiles outside an irregular window are left out). `vtmr = var / mean`, `statistic = (m - 1) * vtmr`, `df = m - 1`, and the p-value is two-sided: `min(1, 2 * min(pchisq(stat, df), pchisq(stat, df, lower.tail = FALSE)))`.
-    - `tiles`: `sf` with `count`, `expected` (from `quadrat.test(...)$expected`) and geometry. Build it with `sf::st_as_sfc()` on each tile of `spatstat.geom::tiles(as.tess(Q))`, then set its CRS to `crs`.
+    - `tiles`: `sf` with `count` (from `quadrat.test(...)$observed`, **not** `as.vector(Q)`, which runs down the columns while the tiles run along the rows), `expected` (from `quadrat.test(...)$expected`) and geometry. Build it with `sf::st_as_sfc()` on each tile of `spatstat.geom::tiles(as.tess(Q))`, then set its CRS to `crs`.
     - `interpretation`: `"H0: the points follow complete spatial randomness (a homogeneous Poisson process). χ² = 2681.08 on 35 df. <decision_text>"`, then `"VTMR = 76.60, which suggests a clustered pattern."` (regular when VTMR < 1, clustered when > 1). When the VTMR test is not significant at α, say `"VTMR = 1.04, which is consistent with a random pattern."` instead.
   - User errors:
     - fewer than 30 points: `"Only <n> points in this region. At least 30 are needed; widen the filters."`
@@ -465,7 +467,7 @@ test_that("as_ppp drops points outside the window", {
 - Modify: `R/mod_placeholders.R` (delete `quadrat_ui`), `app.R` (one line in `server`)
 
 **Interfaces:**
-- Consumes: Task 1 helpers, `to_region_sf()`, `region_window()`, `region_crs()`, `as_ppp()`, `run_quadrat()`. `load_airports()` comes from Task 8: until Task 8 is merged, pass an empty data.frame. The airport option then shows "Only 0 points…", which is fine.
+- Consumes: Task 1 helpers, `to_region_sf()`, `region_window()`, `region_crs()`, `quadrat_window()`, `as_ppp()`, `run_quadrat()`. Build the pattern with `as_ppp(points, quadrat_window(region_window(region)))`, not the region window itself (see the last row of the table under "Scope for 26 Oct"). On the map, draw the rectangle's outline so it is clear which area was tested. `load_airports()` comes from Task 8: until Task 8 is merged, pass an empty data.frame. The airport option then shows "Only 0 points…", which is fine.
 - Produces: `quadrat_ui(id)` and `quadrat_server(id, aircraft, region_id, airports)`, where `airports` is a data.frame with `longitude`, `latitude` and `type`. Inside the server, `result` is the `bindEvent`'d `run_safely()` value.
 
 - [ ] **Step 1: Write the failing module test** (same pattern as Task 5). Use the sample in Europe with `points = "aircraft"`, `nx = 6`, `ny = 6`, `alpha = "0.05"`, `run = 1`, and expect `result()$ok`. Then set `nx = 15`, `ny = 15` with `points = "airports"` and an `airports` argument of `data.frame(longitude = 10, latitude = 50, type = "large_airport")`, and expect `result()$message` to match `"^Only 1 points"`.
