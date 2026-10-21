@@ -16,6 +16,25 @@ airline_name <- function(code, airlines) {
   unname(airlines$name[match(code, airlines$icao)])
 }
 
+airports_path <- file.path("data", "lookups", "airports.rds")
+
+# OurAirports large and medium airports. Columns: ident, type, name,
+# latitude, longitude, iso_country. Namibia's iso_country is the string "NA",
+# not a missing value. An empty table if the file is missing.
+load_airports <- function(path = airports_path) {
+  if (!file.exists(path)) {
+    return(data.frame(
+      ident = character(),
+      type = character(),
+      name = character(),
+      latitude = numeric(),
+      longitude = numeric(),
+      iso_country = character()
+    ))
+  }
+  readRDS(path)
+}
+
 # ---- Flight category rules (used by flight_category()) ---------------------
 # Hand-listed ICAO codes that the airline-name patterns below miss.
 
