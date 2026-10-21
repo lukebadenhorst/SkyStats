@@ -1,8 +1,9 @@
-# Source the non-Shiny app code so tests can call it directly.
+# Source the non-Shiny app code so tests can call it directly: every R/*.R
+# file whose name does not start with mod_.
 # testthat runs with tests/testthat/ as the working directory.
 root <- normalizePath(file.path("..", ".."))
-for (f in c("regions.R", "data_api.R", "lookups.R", "data_prep.R")) {
-  source(file.path(root, "R", f), local = FALSE)
+for (f in list.files(file.path(root, "R"), pattern = "\\.R$", full.names = TRUE)) {
+  if (!startsWith(basename(f), "mod_")) source(f, local = FALSE, encoding = "UTF-8")
 }
 
 read_fixture <- function(name) {
