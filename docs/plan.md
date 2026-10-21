@@ -548,13 +548,17 @@ test_that("a missing airport file gives an empty table", {
     - `resid_moran`: data.frame with `observed`, `expectation`, `variance`, `z`, `p_value`, from `spdep::moran.test(residuals(ols), listw, zero.policy = TRUE)`;
     - `lm_tests`: data.frame with `test = c("LMlag", "LMerr", "RLMlag", "RLMerr")`, `statistic`, `p_value`, from `spdep::lm.RStests(ols, listw, test = c("LMlag", "LMerr", "RLMlag", "RLMerr"), zero.policy = TRUE)` (the elements come back named `RSlag`, `RSerr`, `adjRSlag`, `adjRSerr`);
     - `recommendation`, one of `"OLS"`, `"Spatial lag"` or `"Spatial error"`. If neither LMlag nor LMerr is significant at α, choose OLS. If exactly one is, choose that model. If both are, choose the one whose robust test has the smaller p-value.
-    - `lag`: data.frame from `summary(spatialreg::lagsarlm(formula, data, listw, zero.policy = TRUE))$Coef` (columns `Estimate`, `Std. Error`, `z value`, `Pr(>|z|)`), plus `rho` and `rho_p_value` (`summary(...)$LR1$p.value`). The lag model is always fitted, because it is step 4 of the course workflow.
+    - `lag`: data.frame from `summary(spatialreg::lagsarlm(formula, data, listw, zero.policy = TRUE))$Coef`, renamed to the same columns as `ols` (`term`, `estimate`, `std_error`, `statistic`, `p_value`) so the tab can show both the same way; plus top-level `rho` and `rho_p_value` (`summary(...)$LR1$p.value`). The lag model is always fitted, because it is step 4 of the course workflow.
     - `aic`: data.frame with `model = c("OLS", "Spatial lag")` and `aic`;
     - `residuals`: `units_c` plus `ols_resid` and `lag_resid`;
     - `interpretation`: one sentence each for steps 2–4. Step 2 is the residual Moran's I plus `decision_text`. Step 3 states the recommendation and why. Step 4 gives ρ, its LR p-value and the AIC comparison, saying "fits better" when the lag model's AIC is lower.
   - User errors:
     - n < min_n: `"Only <n> countries have complete data. At least <min_n> are needed."`
     - n ≤ number of coefficients + 2: `"Too many covariates for <n> countries. Remove one."`
+  - Notes from building it:
+    - "Complete" also drops rows whose transformed value is not finite (e.g. `log(0)`).
+    - `spData::world` has no `pop` or `gdpPercap` for France and Norway (and no `gdpPercap` for Syria), so with those covariates Europe runs on 40 of its 44 countries.
+    - The two test fixes below (`sf::st_as_sf()` around `merge()`, and `which()` because Northern Cyprus's `iso_a2` is NA) are in `tests/testthat/test-stats_regression.R`.
 
 - [ ] **Step 1: Write the failing tests**
 
