@@ -1,4 +1,4 @@
-# STAT3037A Global Flights dashboard (demo).
+# STAT3037A Global Flights dashboard.
 # Files in R/ are sourced automatically by Shiny before this file runs.
 
 library(shiny)
@@ -45,7 +45,7 @@ sidebar_filters <- sidebar(
   actionButton("refresh", "Refresh data", icon = icon("rotate"), class = "btn-outline-primary"),
   p(
     class = "small text-muted",
-    "Live data refreshes every 10 minutes. Filters apply to the Live Map in this demo."
+    "Live data refreshes every 10 minutes. Filters apply to every tab; airport points ignore the airline, category and altitude filters."
   )
 )
 
@@ -56,7 +56,6 @@ ui <- page_navbar(
   sidebar = sidebar_filters,
   fillable = "Live Map",
   nav_panel("Live Map", icon = bs_icon("map"), mod_live_ui("live")),
-  nav_panel("Airports & Routes", icon = bs_icon("signpost-split"), routes_ui("routes")),
   nav_panel("Autocorrelation", icon = bs_icon("grid-3x3"), autocorr_ui("autocorr")),
   nav_panel("Point Patterns", icon = bs_icon("dot"), quadrat_ui("quadrat")),
   nav_panel("Spatial Regression", icon = bs_icon("graph-up"), regression_ui("regression")),
