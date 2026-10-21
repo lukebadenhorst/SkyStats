@@ -69,3 +69,41 @@ message(
   round(file.size(airlines_path) / 1024),
   " KB)"
 )
+
+# OurAirports: large and medium airports with their location and country.
+# na.strings = "" only: the default would turn Namibia's ISO code "NA" into a
+# missing value.
+airports_url <- "https://davidmegginson.github.io/ourairports-data/airports.csv"
+
+raw <- utils::read.csv(
+  airports_url,
+  na.strings = "",
+  encoding = "UTF-8",
+  stringsAsFactors = FALSE
+)
+raw <- raw[raw$type %in% c("large_airport", "medium_airport"), , drop = FALSE]
+
+airports <- data.frame(
+  ident = raw$ident,
+  type = raw$type,
+  name = raw$name,
+  latitude = raw$latitude_deg,
+  longitude = raw$longitude_deg,
+  iso_country = raw$iso_country,
+  row.names = NULL
+)
+airports <- airports[!is.na(airports$latitude) & !is.na(airports$longitude), ]
+airports <- airports[order(airports$ident), ]
+rownames(airports) <- NULL
+
+saveRDS(airports, airports_path, compress = "xz")
+
+message(
+  "Saved ",
+  nrow(airports),
+  " airports to ",
+  airports_path,
+  " (",
+  round(file.size(airports_path) / 1024),
+  " KB)"
+)
