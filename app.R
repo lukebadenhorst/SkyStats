@@ -22,12 +22,7 @@ theme <- bs_theme(
 # a dark basemap without loading a second tile set.
 theme <- bs_add_rules(
   theme,
-  '/* The switch defaults to dark grey; make it white on the navy navbar. */
-  bslib-input-dark-mode {
-    --text-1-light: #ffffff;
-    --text-2-light: rgba(255, 255, 255, 0.85);
-  }
-  [data-bs-theme="dark"] {
+  '[data-bs-theme="dark"] {
     .leaflet-container { background: #1a1a1a; }
     .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9); }
     .leaflet-bar a, .info.legend, .leaflet-popup-content-wrapper, .leaflet-popup-tip {
@@ -84,7 +79,12 @@ ui <- page_navbar(
   nav_spacer(),
   nav_item(uiOutput("source_badge")),
   # Opens in light mode (clearer on a projector); the switch flips it.
-  nav_item(input_dark_mode(id = "dark_mode", mode = "light"))
+  # The style makes the icon white on the navy navbar (it defaults to grey).
+  nav_item(input_dark_mode(
+    id = "dark_mode",
+    mode = "light",
+    style = "--text-1: #ffffff; --text-2: rgba(255, 255, 255, 0.85);"
+  ))
 )
 
 server <- function(input, output, session) {
