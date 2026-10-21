@@ -120,6 +120,7 @@ server <- function(input, output, session) {
   })
 
   mod_live_server("live", aircraft = aircraft, region_id = reactive(input$region))
+  autocorr_server("autocorr", aircraft = aircraft, region_id = reactive(input$region))
 
   output$source_badge <- renderUI({
     s <- req(snapshot())
