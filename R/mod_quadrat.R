@@ -191,7 +191,13 @@ quadrat_server <- function(id, aircraft, region_id, airports) {
           weight = 1,
           popup = popup
         ) |>
-        leaflet::addPolylines(data = sf::st_cast(rect, "LINESTRING"), color = "#1d3557", weight = 2) |>
+        # The class lets the dark-mode CSS in app.R lighten the outline.
+        leaflet::addPolylines(
+          data = sf::st_cast(rect, "LINESTRING"),
+          color = "#1d3557",
+          weight = 2,
+          options = leaflet::pathOptions(className = "study-window")
+        ) |>
         leaflet::addCircleMarkers(
           data = points,
           radius = 1.5,
@@ -218,22 +224,23 @@ quadrat_server <- function(id, aircraft, region_id, airports) {
       b <- poisson_bins(counts, res$vtmr$mean)
       mids <- utils::head(b$breaks, -1) + diff(b$breaks) / 2
       h <- graphics::hist(counts, breaks = b$breaks, plot = FALSE)
+      pal <- use_plot_theme()
       par(mar = c(4.5, 4.5, 1, 1))
       plot(
         h,
-        col = "#a8dadc", border = "#ffffff", main = NULL,
+        col = pal$bar, border = pal$border, main = NULL,
         xlab = "Points per quadrat", ylab = "Number of quadrats",
         ylim = c(0, max(h$counts, b$expected) * 1.05)
       )
-      lines(mids, b$expected, col = "#1d3557", lwd = 2)
-      points(mids, b$expected, pch = 19, col = "#1d3557")
+      lines(mids, b$expected, col = pal$line, lwd = 2)
+      points(mids, b$expected, pch = 19, col = pal$line)
       legend(
         "topright",
         legend = c("Observed", paste0("Poisson (mean ", sprintf("%.1f", res$vtmr$mean), ")")),
-        fill = c("#a8dadc", NA), border = c("#ffffff", NA),
-        col = c(NA, "#1d3557"), lwd = c(NA, 2), pch = c(NA, 19), bty = "n"
+        fill = c(pal$bar, NA), border = c(pal$border, NA),
+        col = c(NA, pal$line), lwd = c(NA, 2), pch = c(NA, 19), bty = "n"
       )
-    })
+    }, bg = "transparent")
   })
 }
 
