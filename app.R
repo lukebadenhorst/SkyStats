@@ -123,6 +123,7 @@ server <- function(input, output, session) {
   mod_live_server("live", aircraft = aircraft, region_id = reactive(input$region))
   autocorr_server("autocorr", aircraft = aircraft, region_id = reactive(input$region))
   quadrat_server("quadrat", aircraft = aircraft, region_id = reactive(input$region), airports = airports)
+  regression_server("regression", aircraft = aircraft, region_id = reactive(input$region), airports = airports)
 
   output$source_badge <- renderUI({
     s <- req(snapshot())
