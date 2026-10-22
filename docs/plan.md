@@ -749,4 +749,4 @@ Plan each of these properly before starting.
 - **S2. Manufacturer / type filter.** Trim the OpenSky aircraft database to `icao24`, `manufacturername` and `typecode` (spec §2.4), and add a sidebar picker.
 - **S3. Freeze snapshot and source selector** (spec §2.5), for reproducible report figures.
 - **S4. `renv`** lockfile (spec §4).
-- **S5. Hosting** on shinyapps.io, with the credentials set as secrets.
+- **S5. Hosting** on shinyapps.io. No longer optional: we must hand in the published app as well as the repo. See `docs/shiny_deployment.md` for the plan (deploy by 24 Oct).
