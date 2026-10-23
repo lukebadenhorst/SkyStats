@@ -102,9 +102,12 @@ filters_panel <- fold_panel(
   )
 )
 
-# Each tab's settings panel goes here (method tabs, from Task 4 on: the
-# module's settings_panel(), which doubles as the setup box).
-settings_panes <- lapply(app_tabs$id, function(id) nav_panel_hidden(value = id))
+# Each method tab's settings panel (settings_panel(), which doubles as the
+# setup box) goes in its own pane here; the other tabs' panes stay empty.
+settings_ui <- list(
+  autocorr = autocorr_settings_ui("autocorr")
+)
+settings_panes <- lapply(app_tabs$id, function(id) nav_panel_hidden(value = id, settings_ui[[id]]))
 
 left_col <- div(
   class = "left-col",
@@ -118,8 +121,8 @@ content <- navset_hidden(
   # Placeholder until the Home page (Task 8).
   nav_panel_hidden("home", float_panel(class = "center-panel home-panel", h1("Global Flights"))),
   nav_panel_hidden("live", mod_live_ui("live")),
-  # The method tabs keep their old layout for now, in a scrolling panel.
-  nav_panel_hidden("autocorr", float_panel(class = "legacy-panel", autocorr_ui("autocorr"))),
+  nav_panel_hidden("autocorr", autocorr_results_ui("autocorr")),
+  # These method tabs keep their old layout for now, in a scrolling panel.
   nav_panel_hidden("quadrat", float_panel(class = "legacy-panel", quadrat_ui("quadrat"))),
   nav_panel_hidden("regression", float_panel(class = "legacy-panel", regression_ui("regression"))),
   nav_panel_hidden("about", about_ui("about"))
@@ -196,7 +199,7 @@ server <- function(input, output, session) {
   })
 
   # Tabs. Any element with data-tab="<id>" sends tab_click (www/app.js).
-  # Modules get active = reactive(active_tab() == "<id>") from later tasks on.
+  # Method modules get active = reactive(active_tab() == "<id>").
   active_tab <- reactiveVal("home")
 
   observeEvent(input$tab_click, {
@@ -247,7 +250,12 @@ server <- function(input, output, session) {
   })
 
   mod_live_server("live", aircraft = aircraft)
-  autocorr_server("autocorr", aircraft = aircraft, region_id = reactive(input$region))
+  autocorr_server(
+    "autocorr",
+    aircraft = aircraft,
+    region_id = reactive(input$region),
+    active = reactive(active_tab() == "autocorr")
+  )
   quadrat_server("quadrat", aircraft = aircraft, region_id = reactive(input$region), airports = airports)
   regression_server("regression", aircraft = aircraft, region_id = reactive(input$region), airports = airports)
 

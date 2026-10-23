@@ -56,7 +56,13 @@ method_tab_ui <- function(id, chapter, summary, controls, results) {
 }
 
 alpha_input <- function(ns) {
-  selectInput(ns("alpha"), "Significance level (alpha)", c(0.10, 0.05, 0.01), selected = 0.05)
+  segmented_input(ns("alpha"), "Significance level (alpha)", c("0.10" = "0.1", "0.05" = "0.05", "0.01" = "0.01"), selected = "0.05")
+}
+
+# Radio buttons drawn as a segmented control (class "seg", www/app.css), for
+# a few short text choices.
+segmented_input <- function(inputId, label, choices, selected = NULL) {
+  tagAppendAttributes(radioButtons(inputId, label, choices, selected = selected, inline = TRUE), class = "seg")
 }
 
 # Colours for base-R plots that follow the light/dark theme.
