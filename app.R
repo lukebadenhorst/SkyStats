@@ -102,7 +102,8 @@ filters_panel <- fold_panel(
   )
 )
 
-# Each tab's settings panel goes here (method tabs, from Task 3 on).
+# Each tab's settings panel goes here (method tabs, from Task 4 on: the
+# module's settings_panel(), which doubles as the setup box).
 settings_panes <- lapply(app_tabs$id, function(id) nav_panel_hidden(value = id))
 
 left_col <- div(
@@ -205,6 +206,13 @@ server <- function(input, output, session) {
     nav_select("settings_nav", id)
     active_tab(id)
     session$sendCustomMessage("tab-changed", list(tab = id))
+  })
+
+  # A region button in a method tab's "region refused" message
+  # (region_alert(), www/app.js) sets the shared region filter.
+  observeEvent(input$region_pick, {
+    req(input$region_pick %in% regions$id)
+    updateSelectInput(session, "region", selected = input$region_pick)
   })
 
   # The planes and their altitude legend show on Home and the Live Map only.
