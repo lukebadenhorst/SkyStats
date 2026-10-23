@@ -105,7 +105,8 @@ filters_panel <- fold_panel(
 # Each method tab's settings panel (settings_panel(), which doubles as the
 # setup box) goes in its own pane here; the other tabs' panes stay empty.
 settings_ui <- list(
-  autocorr = autocorr_settings_ui("autocorr")
+  autocorr = autocorr_settings_ui("autocorr"),
+  quadrat = quadrat_settings_ui("quadrat")
 )
 settings_panes <- lapply(app_tabs$id, function(id) nav_panel_hidden(value = id, settings_ui[[id]]))
 
@@ -122,8 +123,8 @@ content <- navset_hidden(
   nav_panel_hidden("home", float_panel(class = "center-panel home-panel", h1("Global Flights"))),
   nav_panel_hidden("live", mod_live_ui("live")),
   nav_panel_hidden("autocorr", autocorr_results_ui("autocorr")),
-  # These method tabs keep their old layout for now, in a scrolling panel.
-  nav_panel_hidden("quadrat", float_panel(class = "legacy-panel", quadrat_ui("quadrat"))),
+  nav_panel_hidden("quadrat", quadrat_results_ui("quadrat")),
+  # This method tab keeps its old layout for now, in a scrolling panel.
   nav_panel_hidden("regression", float_panel(class = "legacy-panel", regression_ui("regression"))),
   nav_panel_hidden("about", about_ui("about"))
 )
@@ -256,7 +257,13 @@ server <- function(input, output, session) {
     region_id = reactive(input$region),
     active = reactive(active_tab() == "autocorr")
   )
-  quadrat_server("quadrat", aircraft = aircraft, region_id = reactive(input$region), airports = airports)
+  quadrat_server(
+    "quadrat",
+    aircraft = aircraft,
+    region_id = reactive(input$region),
+    airports = airports,
+    active = reactive(active_tab() == "quadrat")
+  )
   regression_server("regression", aircraft = aircraft, region_id = reactive(input$region), airports = airports)
 
   output$source_badge <- renderUI({

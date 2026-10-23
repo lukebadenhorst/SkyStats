@@ -113,6 +113,21 @@
     }, 450);
   }
 
+  // The Filters panel is tall enough to push a method's settings panel below
+  // the fold on a small screen. It folds when a method tab opens and unfolds
+  // for Home and Live Map; the user can still fold it by hand in between.
+  var methodTabs = ["autocorr", "quadrat", "regression"];
+  var unfoldTabs = ["home", "live"];
+
+  function foldFilters(tab) {
+    var closeIt = methodTabs.indexOf(tab) >= 0;
+    if (!closeIt && unfoldTabs.indexOf(tab) < 0) return;
+    var panel = document.querySelector(".left-col > .fold-panel");
+    if (!panel || panel.classList.contains("closed") === closeIt) return;
+    var head = panel.querySelector(".fold-head");
+    if (head) toggleFold(head);
+  }
+
   // ---- Results cards -------------------------------------------------------
 
   // Generic: any .btn-more toggles .expanded on its .results-card. The label
@@ -380,6 +395,7 @@
       Shiny.addCustomMessageHandler("tab-changed", function (msg) {
         showTabButton(msg.tab);
         setBodyTab(msg.tab);
+        foldFilters(msg.tab);
       });
     }
   });

@@ -8,9 +8,10 @@ no_airports <- data.frame(longitude = numeric(), latitude = numeric(), type = ch
 test_that("the tab runs on the sample aircraft in Europe", {
   testServer(
     quadrat_server,
-    args = list(aircraft = reactive(sample_aircraft), region_id = reactive("europe"), airports = no_airports),
+    args = list(aircraft = reactive(sample_aircraft), region_id = reactive("europe"), airports = no_airports, active = reactive(TRUE)),
     {
-      session$setInputs(points = "aircraft", airport_types = "large_airport", nx = 6, ny = 6, alpha = "0.05", run = 1)
+      session$setInputs(points = "aircraft", airport_types = "large_airport", nx = 6, ny = 6, alpha = "0.05", setup_region = "europe", setup_run = 1)
+      session$elapse(700)
       expect_true(result()$ok)
       res <- result()$value
       expect_equal(res$vtmr$m, 36)
@@ -26,12 +27,13 @@ test_that("airports are filtered by type, and few points give the user message",
   airports <- data.frame(longitude = c(10, 11), latitude = c(50, 51), type = c("large_airport", "small_airport"))
   testServer(
     quadrat_server,
-    args = list(aircraft = reactive(sample_aircraft), region_id = reactive("europe"), airports = airports),
+    args = list(aircraft = reactive(sample_aircraft), region_id = reactive("europe"), airports = airports, active = reactive(TRUE)),
     {
       session$setInputs(
         points = "airports", airport_types = c("large_airport", "medium_airport"),
-        nx = 15, ny = 15, alpha = "0.05", run = 1
+        nx = 15, ny = 15, alpha = "0.05", setup_region = "europe", setup_run = 1
       )
+      session$elapse(700)
       expect_match(result()$message, "^Only 1 points")
     }
   )
@@ -40,9 +42,11 @@ test_that("airports are filtered by type, and few points give the user message",
 test_that("World is refused with the region message", {
   testServer(
     quadrat_server,
-    args = list(aircraft = reactive(sample_aircraft), region_id = reactive("world"), airports = no_airports),
+    args = list(aircraft = reactive(sample_aircraft), region_id = reactive("world"), airports = no_airports, active = reactive(TRUE)),
     {
-      session$setInputs(points = "aircraft", airport_types = "large_airport", nx = 6, ny = 6, alpha = "0.05", run = 1)
+      session$setInputs(points = "aircraft", airport_types = "large_airport", nx = 6, ny = 6, alpha = "0.05", setup_region = "europe", setup_run = 1)
+      session$elapse(700)
+      expect_true(result()$region_refused)
       expect_match(result()$message, "World has no equal-area projection")
     }
   )
