@@ -30,9 +30,26 @@
     if (state === "hidden") map.closePopup();
   }
 
+  // Keep --gf-br-height at the height of the bottom-right control stack
+  // (zoom, legend, attribution), so results cards stop above it. It changes
+  // when the altitude legend is added or removed.
+  function watchControlCorner(m) {
+    var corner = m.getContainer().querySelector(".leaflet-bottom.leaflet-right");
+    if (!corner) return;
+    function update() {
+      var top = corner.getBoundingClientRect().top;
+      var height = Math.max(0, window.innerHeight - top);
+      document.documentElement.style.setProperty("--gf-br-height", Math.ceil(height) + "px");
+    }
+    update();
+    if (window.ResizeObserver) new ResizeObserver(update).observe(corner);
+    window.addEventListener("resize", update);
+  }
+
   window.gfMapReady = function (m) {
     map = m;
     Object.keys(paneStates).forEach(applyPane);
+    watchControlCorner(m);
   };
 
   // ---- Tabs ----------------------------------------------------------------

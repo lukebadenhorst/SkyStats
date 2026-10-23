@@ -672,13 +672,16 @@ body > .selectize-dropdown .active {
 
 /* ---- Results card ------------------------------------------------------- */
 
+/* The card stops above the bottom-right map controls (zoom, legend,
+   attribution) and scrolls on its own. www/app.js keeps --gf-br-height at
+   the height of that control stack; the fallback covers the zoom buttons. */
 .results-card {
   position: fixed;
   top: var(--gf-top);
   right: 12px;
   z-index: 1000;
   width: 270px;
-  max-height: calc(100vh - var(--gf-top) - 12px);
+  max-height: calc(100vh - var(--gf-top) - var(--gf-br-height, 110px) - 12px);
   padding: 14px;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -854,7 +857,12 @@ body > .selectize-dropdown .active {
 }
 
 /* Temporary: the method tabs' old layout, until Tasks 4-6 move them onto the
-   shared map. */
+   shared map. Its cards' full-screen buttons are hidden: the fixed, blurred
+   panel would trap bslib's full-screen card under its overlay. */
+.legacy-panel .bslib-full-screen-enter {
+  display: none !important;
+}
+
 .legacy-panel {
   position: fixed;
   top: var(--gf-top);
@@ -945,12 +953,24 @@ body > .selectize-dropdown .active {
 
 /* ---- Reduced motion: no slides, fades of at most 150 ms ----------------- */
 
+/* Only the app's own animated elements, listed one by one: a blanket
+   "* { transition-duration }" would also animate Leaflet's transform updates
+   (every element defaults to transition-property: all) and make the map lag. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.15s !important;
-    animation-delay: 0s !important;
+  #map-wrap,
+  #map-wrap::after,
+  .leaflet-pane.gf-pane,
+  .tab-bar.ready .tab-slider,
+  .tab-btn,
+  .icon-panel .icon-btn,
+  .left-col,
+  .fold-body,
+  .fold-chevron,
+  .chips .checkbox label,
+  .results-card,
+  .card-more,
+  .card-more-inner > *,
+  .btn-more {
     transition-duration: 0.15s !important;
     transition-delay: 0s !important;
   }
@@ -959,6 +979,8 @@ body > .selectize-dropdown .active {
   .left-col > .float-panel,
   .tab-pane.active .float-panel {
     animation-name: gf-fade !important;
+    animation-duration: 0.15s !important;
+    animation-delay: 0s !important;
   }
 
   .live-dot::after,
