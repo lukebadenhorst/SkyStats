@@ -1,0 +1,968 @@
+/* Global Flights: the map-first layout (one full-screen map, floating panels).
+   Look and timings follow the planefinder-light and results-panel mockups.
+
+   Rule for later tasks: no ancestor of .left-col (the column itself, the
+   settings_nav tab panes) may get a transform, filter, backdrop-filter or
+   will-change: transform. The method setup box (Task 3) sits inside the left
+   column with position: fixed, and any of those would trap it. Entrance
+   animations are skipped for .setup-mode and .no-enter elements. */
+
+:root {
+  --gf-text: #1c2430;
+  --gf-text-2: #5b6573;
+  --gf-text-3: #8a94a3;
+  --gf-body-text: #3b4552;
+  --gf-accent: #1d6fd8;
+  --gf-accent-soft: #e8f1fd;
+  --gf-live: #16a34a;
+  --gf-panel-bg: rgba(255, 255, 255, 0.94);
+  --gf-panel-border: rgba(28, 36, 48, 0.1);
+  --gf-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 4px 14px rgba(0, 0, 0, 0.08);
+  --gf-control-bg: #f1f3f5;
+  --gf-control-hover: #e7ebef;
+  --gf-input-bg: #ffffff;
+  --gf-input-border: #dde2e7;
+  --gf-divider: #eceff2;
+  --gf-track: #eef0f3;
+  --gf-inverse: #ffffff;
+  --gf-primary-hover: #2e3a4b;
+  --gf-haze: rgba(233, 236, 239, 0.55);
+  --gf-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --gf-top: 66px;
+  --gf-left-w: 250px;
+}
+
+[data-bs-theme="dark"] {
+  --gf-text: #e6e9ee;
+  --gf-text-2: #aab3bf;
+  --gf-text-3: #8a94a3;
+  --gf-body-text: #c9d0d8;
+  --gf-accent-soft: rgba(29, 111, 216, 0.22);
+  --gf-panel-bg: rgba(33, 37, 43, 0.92);
+  --gf-panel-border: rgba(255, 255, 255, 0.1);
+  --gf-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.35);
+  --gf-control-bg: #2c3138;
+  --gf-control-hover: #363c44;
+  --gf-input-bg: #23272d;
+  --gf-input-border: #3a4048;
+  --gf-divider: #343a42;
+  --gf-track: #343a42;
+  --gf-inverse: #1c2430;
+  --gf-primary-hover: #ffffff;
+  --gf-haze: rgba(20, 22, 26, 0.5);
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--gf-text);
+  background: #e9ecef;
+}
+
+/* ---- The shared map ---------------------------------------------------- */
+
+#map-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  transition: filter 0.5s var(--gf-ease);
+}
+
+/* Dim layer, used behind the About panel. */
+#map-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  background: var(--gf-haze);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s var(--gf-ease);
+}
+
+body.tab-about #map-wrap {
+  filter: blur(3px);
+}
+
+body.tab-about #map-wrap::after {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Panes faded by set_pane() in R (www/app.js adds the classes). */
+.leaflet-pane.gf-pane {
+  transition: opacity 0.5s var(--gf-ease);
+}
+
+.leaflet-pane.pane-hidden {
+  opacity: 0;
+}
+
+.leaflet-pane.pane-hidden,
+.leaflet-pane.pane-hidden * {
+  pointer-events: none !important;
+}
+
+.leaflet-pane.pane-busy {
+  opacity: 0.35;
+}
+
+.leaflet-control-zoom {
+  border: none !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+  box-shadow: var(--gf-shadow) !important;
+}
+
+.leaflet-control-zoom a {
+  background: var(--gf-panel-bg) !important;
+  color: var(--gf-text) !important;
+  border-color: var(--gf-divider) !important;
+}
+
+.leaflet-container .info.legend {
+  background: var(--gf-panel-bg);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--gf-panel-border);
+  border-radius: 12px;
+  box-shadow: var(--gf-shadow);
+  color: var(--gf-text-2);
+  font-size: 11.5px;
+  padding: 8px 10px;
+}
+
+.leaflet-container .info.legend strong {
+  color: var(--gf-text);
+  font-weight: 600;
+}
+
+.leaflet-container .leaflet-control-attribution {
+  font-size: 10px;
+}
+
+/* Dark mode: inverting the light basemap tiles gives a dark basemap without
+   loading a second tile set. */
+[data-bs-theme="dark"] .leaflet-container {
+  background: #1a1a1a;
+}
+
+[data-bs-theme="dark"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9);
+}
+
+[data-bs-theme="dark"] .leaflet-bar a,
+[data-bs-theme="dark"] .leaflet-popup-content-wrapper,
+[data-bs-theme="dark"] .leaflet-popup-tip {
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .study-window {
+  stroke: #a8dadc;
+}
+
+/* ---- Floating panels ------------------------------------------------- */
+
+.float-panel {
+  background: var(--gf-panel-bg);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--gf-panel-border);
+  border-radius: 12px;
+  box-shadow: var(--gf-shadow);
+  color: var(--gf-text);
+}
+
+/* ---- Top bar ---------------------------------------------------------- */
+
+.top-bar {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 1010;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.top-bar > *,
+.top-right > * {
+  pointer-events: auto;
+}
+
+.brand {
+  height: 42px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.brand-icon {
+  color: var(--gf-accent);
+  width: 18px;
+  height: 18px;
+}
+
+.tab-bar {
+  position: relative;
+  height: 42px;
+  padding: 4px;
+  display: flex;
+  gap: 2px;
+}
+
+.tab-slider {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: 0;
+  border-radius: 8px;
+  background: var(--gf-text);
+}
+
+.tab-bar.ready .tab-slider {
+  transition:
+    left 0.35s var(--gf-ease),
+    width 0.35s var(--gf-ease);
+}
+
+.tab-btn {
+  position: relative;
+  z-index: 1;
+  border: 0;
+  background: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--gf-text-2);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.25s;
+}
+
+.tab-btn:hover {
+  color: var(--gf-text);
+}
+
+.tab-btn.active {
+  color: var(--gf-inverse);
+}
+
+.tab-btn:focus-visible,
+.icon-btn:focus-visible,
+.btn-more:focus-visible,
+.fold-head:focus-visible {
+  outline: 2px solid var(--gf-accent);
+  outline-offset: 1px;
+}
+
+.top-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.source-badge {
+  height: 42px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.source-badge > svg {
+  color: var(--gf-text-3);
+  flex: none;
+}
+
+.live-dot {
+  position: relative;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gf-live);
+}
+
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--gf-live);
+  animation: gf-ping 2s ease-out infinite;
+}
+
+@keyframes gf-ping {
+  to {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+.icon-panel {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-panel .icon-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--gf-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.icon-panel .icon-btn:hover {
+  background: var(--gf-control-bg);
+}
+
+/* Narrow screens (a projector at 125-150% zoom): drop the brand name, then
+   the badge time (still in its tooltip), and tighten the tabs. */
+@media (max-width: 1150px) {
+  .brand-name {
+    display: none;
+  }
+
+  .brand {
+    padding: 0 11px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .badge-time {
+    display: none;
+  }
+
+  .top-bar,
+  .top-right {
+    gap: 6px;
+  }
+
+  .tab-btn {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+}
+
+/* ---- Left column -------------------------------------------------------- */
+
+/* The padding leaves room for the panels' shadows inside the scroll box. */
+.left-col {
+  position: fixed;
+  top: calc(var(--gf-top) - 4px);
+  left: 0;
+  z-index: 1000;
+  width: calc(var(--gf-left-w) + 24px);
+  max-height: calc(100vh - var(--gf-top) + 4px);
+  padding: 4px 12px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition:
+    opacity 0.35s var(--gf-ease),
+    visibility 0.35s;
+}
+
+.left-col .tab-content:empty,
+.left-col .tab-pane:empty {
+  display: none;
+}
+
+body.tab-about .left-col {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.panel-note {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--gf-text-3);
+}
+
+/* ---- Folding panels ------------------------------------------------------ */
+
+.fold-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 12px;
+}
+
+.fold-title {
+  flex: 1;
+}
+
+.fold-tag {
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--gf-accent-soft);
+  color: var(--gf-accent);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.fold-chevron {
+  display: flex;
+  color: var(--gf-text-3);
+  transition: transform 0.3s var(--gf-ease);
+}
+
+.fold-panel.closed .fold-chevron {
+  transform: rotate(-90deg);
+}
+
+.fold-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows 0.4s var(--gf-ease),
+    opacity 0.3s;
+}
+
+.fold-panel.closed .fold-body {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+
+.fold-inner {
+  min-height: 0;
+}
+
+/* Clip only while folded or folding, so dropdowns can overflow when open. */
+.fold-panel.closed .fold-inner,
+.fold-panel.folding .fold-inner {
+  overflow: hidden;
+}
+
+.fold-content {
+  padding: 0 12px 12px;
+}
+
+/* ---- Inputs inside panels ------------------------------------------------ */
+
+.float-panel .shiny-input-container:not(.shiny-input-container-inline) {
+  width: 100%;
+}
+
+.float-panel .form-group {
+  margin-bottom: 10px;
+}
+
+.float-panel .control-label,
+.float-panel .form-label {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gf-text-3);
+}
+
+.float-panel select.form-control,
+.float-panel select.form-select {
+  width: 100%;
+  padding: 7px 28px 7px 9px;
+  border: 1px solid var(--gf-input-border);
+  border-radius: 8px;
+  background-color: var(--gf-input-bg);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%238a94a3' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 12px 12px;
+  color: var(--gf-text);
+  font-size: 12.5px;
+  appearance: none;
+}
+
+.float-panel .selectize-control {
+  margin-bottom: 0;
+}
+
+.float-panel .selectize-input {
+  min-height: 34px;
+  padding: 6px 9px;
+  border: 1px solid var(--gf-input-border);
+  border-radius: 8px;
+  background: var(--gf-input-bg);
+  box-shadow: none;
+  color: var(--gf-text);
+  font-size: 12.5px;
+}
+
+.float-panel .selectize-input.focus,
+.float-panel select:focus {
+  border-color: var(--gf-accent);
+  box-shadow: 0 0 0 3px var(--gf-accent-soft);
+  outline: none;
+}
+
+.float-panel .selectize-input > input {
+  color: var(--gf-text);
+}
+
+.float-panel .selectize-control.multi .selectize-input > div.item {
+  margin: 1px 4px 1px 0;
+  padding: 1px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--gf-accent-soft);
+  color: var(--gf-accent);
+  font-size: 12px;
+}
+
+/* The airline dropdown hangs off <body> (dropdownParent), above the panels. */
+body > .selectize-dropdown {
+  z-index: 1100;
+  border: 1px solid var(--gf-panel-border);
+  border-radius: 8px;
+  box-shadow: var(--gf-shadow);
+  background: var(--gf-input-bg);
+  color: var(--gf-text);
+  font-size: 12.5px;
+  overflow: hidden;
+}
+
+body > .selectize-dropdown .active {
+  background: var(--gf-accent-soft);
+  color: var(--gf-text);
+}
+
+/* Chips: Shiny's checkbox markup (.checkbox > label > input + span), styled
+   with :has(); the inputs are the real ones, just visually hidden. */
+.chips .shiny-options-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.chips .checkbox {
+  position: relative;
+  margin: 0;
+}
+
+.chips .checkbox label {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 32px;
+  margin: 0;
+  padding: 6px 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--gf-control-bg);
+  color: var(--gf-text-2);
+  font-size: 12px;
+  line-height: 1.25;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+
+.chips .checkbox label:hover {
+  background: var(--gf-control-hover);
+}
+
+.chips .checkbox input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chips .checkbox label:has(input:checked) {
+  border-color: var(--gf-accent);
+  background: var(--gf-accent-soft);
+  color: var(--gf-accent);
+  font-weight: 500;
+}
+
+.chips .checkbox label:has(input:focus-visible) {
+  outline: 2px solid var(--gf-accent);
+  outline-offset: 1px;
+}
+
+.float-panel .form-switch {
+  font-size: 12.5px;
+}
+
+.float-panel .form-check-input:checked {
+  background-color: var(--gf-text);
+  border-color: var(--gf-text);
+}
+
+/* Slim range sliders (ionRangeSlider). */
+.float-panel .irs--shiny .irs-line {
+  height: 4px;
+  top: 27px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--gf-track);
+}
+
+.float-panel .irs--shiny .irs-bar {
+  height: 4px;
+  top: 27px;
+  border: 0;
+  background: var(--gf-text);
+}
+
+.float-panel .irs--shiny .irs-handle {
+  top: 21px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--gf-text);
+  background: var(--gf-input-bg);
+  box-shadow: none;
+}
+
+.float-panel .irs--shiny .irs-single,
+.float-panel .irs--shiny .irs-from,
+.float-panel .irs--shiny .irs-to {
+  background: var(--gf-text);
+  color: var(--gf-inverse);
+  font-size: 10.5px;
+}
+
+.float-panel .irs--shiny .irs-min,
+.float-panel .irs--shiny .irs-max {
+  background: transparent;
+  color: var(--gf-text-3);
+  font-size: 10px;
+}
+
+/* ---- Results card ------------------------------------------------------- */
+
+.results-card {
+  position: fixed;
+  top: var(--gf-top);
+  right: 12px;
+  z-index: 1000;
+  width: 270px;
+  max-height: calc(100vh - var(--gf-top) - 12px);
+  padding: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  transition: width 0.5s var(--gf-ease);
+}
+
+.results-card.expanded {
+  width: min(640px, calc(100vw - 300px));
+}
+
+.card-label {
+  margin: 0 0 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gf-text-3);
+}
+
+.big-number {
+  margin: 0 0 10px;
+  font-size: 34px;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-stat {
+  margin-bottom: 12px;
+}
+
+.stat-number {
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-bar {
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--gf-track);
+}
+
+.stat-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--gf-accent);
+  animation: gf-grow 1.4s var(--gf-ease);
+}
+
+@keyframes gf-grow {
+  from {
+    width: 0;
+  }
+}
+
+.country-list {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+}
+
+.country-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--gf-divider);
+}
+
+.country-list li:last-child {
+  border-bottom: 0;
+}
+
+.country-count {
+  color: var(--gf-text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-more {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--gf-text);
+  border-radius: 8px;
+  background: var(--gf-text);
+  color: var(--gf-inverse);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-more:hover {
+  background: var(--gf-primary-hover);
+}
+
+.card-more {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.5s var(--gf-ease);
+}
+
+.results-card.expanded .card-more {
+  grid-template-rows: 1fr;
+}
+
+.card-more-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.card-more-inner > * {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--gf-divider);
+  opacity: 0;
+  transition: opacity 0.4s 0.2s;
+}
+
+.results-card.expanded .card-more-inner > * {
+  opacity: 1;
+}
+
+.results-card .dataTables_wrapper {
+  font-size: 11.5px;
+}
+
+/* ---- Centred panels (Home placeholder, About) and the legacy panel ------ */
+
+/* Centred with auto margins rather than a transform, so the entrance
+   animation can use transform freely. */
+.center-panel {
+  position: fixed;
+  top: var(--gf-top);
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  z-index: 990;
+  width: min(960px, calc(100vw - 24px));
+  height: fit-content;
+  max-height: calc(100vh - var(--gf-top) - 12px);
+  margin: auto;
+  padding: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.home-panel {
+  width: fit-content;
+  padding: 18px 28px;
+}
+
+.home-panel h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.about-panel .card {
+  background: transparent;
+  border-color: var(--gf-divider);
+  box-shadow: none;
+}
+
+/* Temporary: the method tabs' old layout, until Tasks 4-6 move them onto the
+   shared map. */
+.legacy-panel {
+  position: fixed;
+  top: var(--gf-top);
+  bottom: 12px;
+  left: calc(var(--gf-left-w) + 24px);
+  right: 12px;
+  z-index: 990;
+  padding: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+/* ---- Entrances ------------------------------------------------------------ */
+
+@keyframes gf-enter-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes gf-enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes gf-enter-left {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+
+@keyframes gf-enter-right {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+
+@keyframes gf-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* On load: the top bar drops in, then the filters slide in from the left. */
+.top-bar .enter {
+  animation: gf-enter-down 0.6s var(--gf-ease) both;
+}
+
+.top-bar .tab-bar {
+  animation-delay: 0.08s;
+}
+
+.top-right > :nth-child(1) {
+  animation-delay: 0.16s;
+}
+
+.top-right > :nth-child(2) {
+  animation-delay: 0.24s;
+}
+
+.top-right > :nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+.left-col > .float-panel {
+  animation: gf-enter-left 0.6s var(--gf-ease) 0.2s both;
+}
+
+/* On a tab switch: the tab's panels enter (Bootstrap re-shows the pane, which
+   restarts the animation). Each panel itself moves; never its ancestors. */
+.tab-pane.active .float-panel:not(.setup-mode):not(.no-enter) {
+  animation: gf-enter-up 0.6s var(--gf-ease) both;
+}
+
+.tab-pane.active .results-card:not(.setup-mode):not(.no-enter) {
+  animation-name: gf-enter-right;
+}
+
+.left-col .tab-pane.active .float-panel:not(.setup-mode):not(.no-enter) {
+  animation-name: gf-enter-left;
+}
+
+/* ---- Reduced motion: no slides, fades of at most 150 ms ----------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.15s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.15s !important;
+    transition-delay: 0s !important;
+  }
+
+  .top-bar .enter,
+  .left-col > .float-panel,
+  .tab-pane.active .float-panel {
+    animation-name: gf-fade !important;
+  }
+
+  .live-dot::after,
+  .stat-bar i {
+    animation: none !important;
+  }
+}

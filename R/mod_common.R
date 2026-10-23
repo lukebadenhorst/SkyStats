@@ -1,5 +1,30 @@
-# Shared UI pieces for the method tabs (Autocorrelation, Point Patterns,
-# Spatial Regression).
+# Shared UI pieces: the floating panels used on every tab, and the pieces for
+# the method tabs (Autocorrelation, Point Patterns, Spatial Regression).
+
+# A rounded panel floating over the shared map (styled in www/app.css).
+float_panel <- function(..., class = NULL, id = NULL) {
+  div(id = id, class = paste(c("float-panel", class), collapse = " "), ...)
+}
+
+# A floating panel whose body folds away when its header is clicked. The
+# folding happens in the browser (www/app.js). tag: optional small label in
+# the header, such as a chapter ("Ch 4").
+fold_panel <- function(title, ..., open = TRUE, tag = NULL) {
+  float_panel(
+    class = c("fold-panel", if (!open) "closed"),
+    div(
+      class = "fold-head",
+      role = "button",
+      tabindex = "0",
+      `aria-expanded` = if (open) "true" else "false",
+      span(class = "fold-title", title),
+      if (!is.null(tag)) span(class = "fold-tag", tag),
+      span(class = "fold-chevron", bsicons::bs_icon("chevron-down"))
+    ),
+    # fold-body animates its height; fold-inner clips; fold-content pads.
+    div(class = "fold-body", div(class = "fold-inner", div(class = "fold-content", ...)))
+  )
+}
 
 # Layout for a method tab: parameters and the Run button on the left, the
 # method summary and the results on the right.
