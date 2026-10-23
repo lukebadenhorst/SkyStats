@@ -152,21 +152,31 @@
     return document.querySelector(".settings-panel.setup-mode:not(.setup-closing)");
   }
 
+  // body.setup-open while any box is open (dim, blur, raised left column);
+  // body.setup-closing while a box is animating out, so it stays above the
+  // fading dim. Derived from the panels, because R's messages for two tabs
+  // (one box closing, another opening) can arrive in either order.
+  function syncSetupBody() {
+    var body = document.body;
+    body.classList.toggle("setup-open", !!openSetupPanel());
+    body.classList.toggle("setup-closing", !!document.querySelector(".settings-panel.setup-closing"));
+  }
+
   function openSetup(panel) {
     clearTimeout(panel._gfSetupTimer);
     panel.classList.remove("setup-closing");
     panel.classList.add("setup-mode");
-    document.body.classList.add("setup-open");
+    syncSetupBody();
   }
 
   function closeSetup(panel) {
     if (!panel.classList.contains("setup-mode") || panel.classList.contains("setup-closing")) {
-      if (!openSetupPanel()) document.body.classList.remove("setup-open");
+      syncSetupBody();
       return;
     }
-    document.body.classList.remove("setup-open");
     function finish() {
       panel.classList.remove("setup-mode", "setup-closing");
+      syncSetupBody();
     }
     // A panel in a hidden tab has nothing to animate.
     if (!panel.getClientRects().length) {
@@ -174,6 +184,7 @@
       return;
     }
     panel.classList.add("setup-closing");
+    syncSetupBody();
     clearTimeout(panel._gfSetupTimer);
     panel._gfSetupTimer = setTimeout(finish, reduceMotion ? 150 : 400);
   }
@@ -266,6 +277,7 @@
       }
     }
     el._gfCount = requestAnimationFrame(step);
+    return formatNumber(start, digits, to.suffix);
   }
 
   // ---- Wiring ----------------------------------------------------------------

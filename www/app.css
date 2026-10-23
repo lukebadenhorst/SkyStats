@@ -443,9 +443,19 @@ body.tab-about .left-col {
 /* With the setup box open, the left column (which holds the box) rises above
    the dim overlay and the top bar; its other panels fade out and the column
    lets clicks through to the overlay. */
-body.setup-open .left-col {
+body.setup-open .left-col,
+body.setup-closing .left-col {
   z-index: 1030;
+}
+
+body.setup-open .left-col {
   pointer-events: none;
+}
+
+/* The top bar stays clickable above the dim, so a first-time visitor can
+   leave the tab without pressing Run (that closes the box). */
+body.setup-open .top-bar {
+  z-index: 1025;
 }
 
 .left-col > .float-panel {
