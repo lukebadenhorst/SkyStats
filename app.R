@@ -106,7 +106,8 @@ filters_panel <- fold_panel(
 # setup box) goes in its own pane here; the other tabs' panes stay empty.
 settings_ui <- list(
   autocorr = autocorr_settings_ui("autocorr"),
-  quadrat = quadrat_settings_ui("quadrat")
+  quadrat = quadrat_settings_ui("quadrat"),
+  regression = regression_settings_ui("regression")
 )
 settings_panes <- lapply(app_tabs$id, function(id) nav_panel_hidden(value = id, settings_ui[[id]]))
 
@@ -124,8 +125,7 @@ content <- navset_hidden(
   nav_panel_hidden("live", mod_live_ui("live")),
   nav_panel_hidden("autocorr", autocorr_results_ui("autocorr")),
   nav_panel_hidden("quadrat", quadrat_results_ui("quadrat")),
-  # This method tab keeps its old layout for now, in a scrolling panel.
-  nav_panel_hidden("regression", float_panel(class = "legacy-panel", regression_ui("regression"))),
+  nav_panel_hidden("regression", regression_results_ui("regression")),
   nav_panel_hidden("about", about_ui("about"))
 )
 
@@ -264,7 +264,13 @@ server <- function(input, output, session) {
     airports = airports,
     active = reactive(active_tab() == "quadrat")
   )
-  regression_server("regression", aircraft = aircraft, region_id = reactive(input$region), airports = airports)
+  regression_server(
+    "regression",
+    aircraft = aircraft,
+    region_id = reactive(input$region),
+    airports = airports,
+    active = reactive(active_tab() == "regression")
+  )
 
   output$source_badge <- renderUI({
     s <- req(snapshot())

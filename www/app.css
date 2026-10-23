@@ -1506,7 +1506,7 @@ body > .selectize-dropdown .active {
   background: rgba(255, 255, 255, 0.5);
 }
 
-/* ---- Centred panels (Home placeholder, About) and the legacy panel ------ */
+/* ---- Centred panels (Home placeholder, About) -------------------------- */
 
 /* Centred with auto margins rather than a transform, so the entrance
    animation can use transform freely. */
@@ -1543,26 +1543,6 @@ body > .selectize-dropdown .active {
   background: transparent;
   border-color: var(--gf-divider);
   box-shadow: none;
-}
-
-/* Temporary: the method tabs' old layout, until Tasks 4-6 move them onto the
-   shared map. Its cards' full-screen buttons are hidden: the fixed, blurred
-   panel would trap bslib's full-screen card under its overlay. */
-.legacy-panel .bslib-full-screen-enter {
-  display: none !important;
-}
-
-.legacy-panel {
-  position: fixed;
-  top: var(--gf-top);
-  bottom: 12px;
-  left: calc(var(--gf-left-w) + 24px);
-  right: 12px;
-  z-index: 990;
-  padding: 14px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
 }
 
 /* ---- Entrances ------------------------------------------------------------ */
