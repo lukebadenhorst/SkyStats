@@ -1,10 +1,18 @@
 # Deploying the app to shinyapps.io
 
-We have to hand in both the GitHub repo and a published app. This doc explains how we publish it and how the OpenSky API works once the app is hosted. The deploy script (`deploy.R`) is written; the account, the token and the project `.Renviron` (sections 3 and 4) are still to do. It replaces stretch goal S5 in `docs/plan.md`, which is now required.
+We have to hand in both the GitHub repo and a published app. This doc explains how we publish it and how the OpenSky API works once the app is hosted. The app was deployed on 24 Oct with `deploy.R`; OpenSky turned out to block the server, so the hosted app shows the sample (section 1). It replaces stretch goal S5 in `docs/plan.md`, which is now required.
 
 **Deploy by 24 Oct**, so there is time to fix problems before the 26 Oct deadline. The first deploy can take 10–20 minutes while the server installs the packages.
 
 ## 1. How the API works when the app is hosted
+
+> **Confirmed on 24 Oct: OpenSky blocks shinyapps.io.** The hosted app is at <https://wjpfz8-luke-badenhorst.shinyapps.io/stat3037a-flights/>, and it always shows the bundled sample (badge: "Sample"). A test app on the same server could not open a connection to either `auth.opensky-network.org` or `opensky-network.org` (no reply within 15 seconds), while Google and GitHub answered in 0.1 seconds. So the server's internet works, and OpenSky silently drops connections from it, most likely because it blocks cloud data centres. No change to our code or credentials can fix this, and calling the API without signing in is blocked too. What we do instead:
+>
+> - **Hosted app:** recapture the sample shortly before submitting and redeploy (section 8), so the snapshot is recent.
+> - **Class presentation:** run the app from a laptop in Positron, where live data works.
+> - **README and write-up:** say why the hosted app shows a snapshot, so markers don't take it for a bug.
+>
+> The rest of this section describes how live mode works when OpenSky is reachable, as it is locally.
 
 The app already works this way when you run it locally. Hosting changes nothing in the code.
 
@@ -89,7 +97,7 @@ To deploy, open the repo in Positron and run `source("deploy.R")`. To update the
 
 ## 7. Checks after deploying
 
-1. **Open the URL and look at the badge.** "Live" means the server reached OpenSky. "Sample" or an error message means it did not (see section 8).
+1. **Open the URL and look at the badge.** On shinyapps.io it says "Sample" with an "OpenSky request failed … Connection timeout" message, which is expected (section 1). Check that the sample time is recent. Any other message means something else is wrong (see section 8).
 2. **Run each method once** (Spatial autocorrelation, Point patterns, Regression) in at least one region.
 3. **Read the logs** if anything fails: the app's **Logs** tab on shinyapps.io, or `rsconnect::showLogs(appName = "stat3037a-flights")`.
 4. **Check memory.** The free plan gives each app a limited amount of memory. If the logs show the app being killed, try a smaller region or hex size first.
@@ -99,7 +107,7 @@ To deploy, open the repo in Positron and run `source("deploy.R")`. To update the
 
 | Risk | What happens | What to do |
 |---|---|---|
-| OpenSky does not answer requests from shinyapps.io's servers. Its docs don't mention this, but some APIs block cloud servers. | The badge shows "Sample" with a "request failed" message. The app still works. | Recapture the sample shortly before submitting (`data-raw/capture_sample.R`, 4 credits) and redeploy, so the sample is recent. Mention it in the README. |
+| **Happened (24 Oct):** OpenSky does not answer requests from shinyapps.io's servers. Its docs don't mention this. | The badge shows "Sample" with a "request failed … Connection timeout" message. The app still works. | Recapture the sample shortly before submitting (`Rscript data-raw/capture_sample.R` from the repo folder, 4 credits) and run `source("deploy.R")`, so the sample is recent. The README says why. Recapture on a weekday afternoon UTC for the fullest sky: the 24 Oct Saturday-morning capture has 6,811 aircraft, against 13,233 on a Tuesday afternoon. |
 | Wrong or missing credentials in `.Renviron` | Sample mode, with "No OpenSky credentials set". | Fix `.Renviron` and redeploy. |
 | A package fails to install on the server | The deploy stops with an error in the build log. | Read the log. Usually updating the package locally and redeploying fixes it. |
 | We use up the 25 free active hours | The app goes offline until next month. | Unlikely: the app sleeps when idle. Avoid leaving the app open in a browser tab for days. |
@@ -107,6 +115,6 @@ To deploy, open the repo in Positron and run `source("deploy.R")`. To update the
 
 ## 9. Hand-in
 
-- Put the app URL at the top of `README.md`, so it is in the repo too.
+- The app URL is at the top of `README.md`, so it is in the repo too.
 - Submit the GitHub repo link and the app URL. The repo is private, so the lecturer will need access to it (add them as a collaborator, or make the repo public before submitting).
 - Leave the app deployed until marks are out.
