@@ -120,8 +120,7 @@ left_col <- div(
 content <- navset_hidden(
   id = "tab",
   selected = "home",
-  # Placeholder until the Home page (Task 8).
-  nav_panel_hidden("home", float_panel(class = "center-panel home-panel", h1("Global Flights"))),
+  nav_panel_hidden("home", home_ui("home")),
   nav_panel_hidden("live", mod_live_ui("live")),
   nav_panel_hidden("autocorr", autocorr_results_ui("autocorr")),
   nav_panel_hidden("quadrat", quadrat_results_ui("quadrat")),
@@ -135,7 +134,8 @@ ui <- page(
   tags$head(
     tags$link(rel = "stylesheet", href = "app.css"),
     tags$script(src = "app.js"),
-    tags$script(src = "planes.js")
+    tags$script(src = "planes.js"),
+    tags$script(src = "tour.js")
   ),
   div(id = "map-wrap", leafletOutput("map", height = "100%")),
   top_bar,
@@ -258,6 +258,7 @@ server <- function(input, output, session) {
     }
   })
 
+  home_server("home", aircraft = aircraft)
   mod_live_server("live", aircraft = aircraft, snapshot_id = snapshot_id)
   autocorr_server(
     "autocorr",

@@ -56,6 +56,15 @@
     window.addEventListener("resize", update);
   }
 
+  // Set a pane's state: from R's "map-pane" messages, and from www/tour.js
+  // (the tour shows its own pane on one step).
+  function setPane(pane, state) {
+    paneStates[pane] = state;
+    applyPane(pane);
+    applyBusy(pane);
+  }
+  window.gfSetPane = setPane;
+
   window.gfMapReady = function (m) {
     map = m;
     Object.keys(paneStates).forEach(applyPane);
@@ -382,9 +391,7 @@
 
     if (window.Shiny && Shiny.addCustomMessageHandler) {
       Shiny.addCustomMessageHandler("map-pane", function (msg) {
-        paneStates[msg.pane] = msg.state;
-        applyPane(msg.pane);
-        applyBusy(msg.pane);
+        setPane(msg.pane, msg.state);
       });
       Shiny.addCustomMessageHandler("setup", function (msg) {
         var panel = document.getElementById(msg.id);
