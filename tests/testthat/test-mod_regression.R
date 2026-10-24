@@ -65,7 +65,17 @@ test_that("queen weights in Europe report the countries with no neighbours", {
   )
 })
 
-test_that("changing the residual type does not re-run the model", {
+test_that("changing the residual type recolours the legend and does not re-run the model", {
+  # run_regression() is a global function (sourced by helper-source.R), so
+  # swap in a counting wrapper for this test.
+  original <- get("run_regression", envir = globalenv())
+  runs <- 0
+  assign("run_regression", function(...) {
+    runs <<- runs + 1
+    original(...)
+  }, envir = globalenv())
+  on.exit(assign("run_regression", original, envir = globalenv()))
+
   testServer(
     regression_server,
     args = list(aircraft = reactive(sample_aircraft), region_id = reactive("europe"), airports = airports, active = reactive(TRUE)),
@@ -75,10 +85,27 @@ test_that("changing the residual type does not re-run the model", {
         alpha = "0.05", resid = "ols_resid", setup_region = "europe", setup_run = 1
       )
       session$elapse(700)
-      first <- result()
+      expect_true(result()$ok)
+      expect_equal(runs, 1)
+      first_params <- params()
+      ols_legend <- output$resid_legend$html
+
       session$setInputs(resid = "lag_resid")
       session$elapse(700)
-      expect_identical(result(), first)
+      expect_equal(runs, 1)
+      expect_identical(params(), first_params)
+      lag_legend <- output$resid_legend$html
+      expect_match(ols_legend, "OLS residual")
+      expect_match(lag_legend, "Lag residual")
+      expect_false(identical(ols_legend, lag_legend))
+
+      # A real input change still re-runs, so the counter is a fair check.
+      # (spdep warns about countries with no neighbours under queen weights.)
+      suppressWarnings({
+        session$setInputs(weights = "queen")
+        session$elapse(700)
+      })
+      expect_equal(runs, 2)
     }
   )
 })
