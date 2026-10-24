@@ -1,6 +1,6 @@
 # Deploying the app to shinyapps.io
 
-We have to hand in both the GitHub repo and a published app. This doc explains how we will publish it and how the OpenSky API works once the app is hosted. It is a plan only: none of this is set up yet. It replaces stretch goal S5 in `docs/plan.md`, which is now required.
+We have to hand in both the GitHub repo and a published app. This doc explains how we publish it and how the OpenSky API works once the app is hosted. The deploy script (`deploy.R`) is written; the account, the token and the project `.Renviron` (sections 3 and 4) are still to do. It replaces stretch goal S5 in `docs/plan.md`, which is now required.
 
 **Deploy by 24 Oct**, so there is time to fix problems before the 26 Oct deadline. The first deploy can take 10–20 minutes while the server installs the packages.
 
@@ -43,7 +43,7 @@ shinyapps.io has no settings page for secrets. Instead, rsconnect uploads a `.Re
 
 2. Check that git ignores it. `.gitignore` already lists `.Renviron`, so `git status` should not show it. **Never commit it.**
 
-The uploaded files are private to our shinyapps.io account. The server only shows files in a `www/` folder to visitors, and we have none.
+The uploaded files are private to our shinyapps.io account. The server only shows files in the `www/` folder to visitors. Ours holds the app's CSS and JavaScript (`app.css`, `app.js`, `planes.js`, `tour.js`), so never put a secret there.
 
 Note: when R starts in the repo folder, it reads this project `.Renviron` instead of the one in your home folder. Because it holds the same two credentials, the app behaves the same locally.
 
@@ -56,25 +56,22 @@ By default rsconnect uploads **everything** in the folder. That includes files g
 | `app.R` | `context/` (lecturer's material) |
 | `R/` (Shiny sources it before `app.R`) | `docs/`, `tests/`, `data-raw/` |
 | `data/` (lookups and the sample snapshot, about 0.5 MB) | `README.md`, `STATE.md`, `CLAUDE.md` |
-| `.Renviron` (the credentials) | `.git/` |
+| `www/` (the CSS and JavaScript; without it the map and the panels break) | `deploy.R`, `.git/` |
+| `.Renviron` (the credentials) | |
+
+If a new folder the app needs is added later, add it to the list in `deploy.R` too.
 
 ## 6. The deploy script
 
-We will add `deploy.R` at the repo root. Shiny only runs `app.R` and the files in `R/`, so the app ignores it.
+`deploy.R` at the repo root does the deploy. Shiny only runs `app.R` and the files in `R/`, so the app ignores it. Before deploying, it stops with a message if rsconnect is not installed, no shinyapps.io account is set up, or `.Renviron` is missing. The core of it:
 
 ```r
-# Deploys the app to shinyapps.io. Run from the repo folder after
-# rsconnect::setAccountInfo() (section 3) and with .Renviron in place (section 4).
-
-if (!file.exists(".Renviron")) {
-  stop("Create .Renviron with the OpenSky credentials first (docs/shiny_deployment.md).")
-}
-
 files <- c(
   "app.R",
   ".Renviron",
   list.files("R", full.names = TRUE),
-  list.files("data", recursive = TRUE, full.names = TRUE)
+  list.files("data", recursive = TRUE, full.names = TRUE),
+  list.files("www", recursive = TRUE, full.names = TRUE)
 )
 
 rsconnect::deployApp(
@@ -86,7 +83,7 @@ rsconnect::deployApp(
 )
 ```
 
-rsconnect reads our code to find the packages it needs (from `library()` calls and `pkg::fn()` calls), so every package must be installed locally before deploying. We will also add `rsconnect/` to `.gitignore`: rsconnect creates that folder after the first deploy to remember the app's ID, and it is only useful on the computer that deploys.
+rsconnect reads our code to find the packages it needs (from `library()` calls and `pkg::fn()` calls), so every package must be installed locally before deploying. `.gitignore` lists `rsconnect/`: rsconnect creates that folder after the first deploy to remember the app's ID, and it is only useful on the computer that deploys.
 
 To deploy, open the repo in Positron and run `source("deploy.R")`. To update the app later, run it again: the URL stays the same.
 

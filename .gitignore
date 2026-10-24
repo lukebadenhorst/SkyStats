@@ -10,6 +10,9 @@
 # App caches
 cache/
 
+# shinyapps.io deploy record (only useful on the computer that deploys)
+rsconnect/
+
 # renv library (lockfile is committed)
 renv/library/
 renv/staging/
