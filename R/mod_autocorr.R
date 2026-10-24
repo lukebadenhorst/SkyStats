@@ -1,10 +1,15 @@
 # Autocorrelation tab (Ch 4): counts aircraft in a hex grid over the region,
 # runs a global test (Moran's I, Geary's C or Global G) and maps the LISA
-# clusters. The statistics are in R/stats_autocorr.R.
+# clusters on the shared map. The statistics are in R/stats_autocorr.R.
 #
-# autocorr_server() takes two reactives from app.R:
+# Three parts, all with module id "autocorr" (the method name):
+#   autocorr_settings_ui()  the settings panel, which is also the setup box
+#   autocorr_results_ui()   the results card
+#   autocorr_server()       runs the method and draws the map layer
+# autocorr_server() takes three reactives from app.R:
 #   aircraft  prepped + filtered state vectors
 #   region_id the selected region
+#   active    TRUE while the tab is open
 
 lisa_colours <- c(
   "High-High" = "#d7191c",
@@ -14,21 +19,25 @@ lisa_colours <- c(
   "Not significant" = "#eeeeee"
 )
 
-autocorr_ui <- function(id) {
+autocorr_settings_ui <- function(id) {
   ns <- NS(id)
-  method_tab_ui(
-    id,
-    chapter = "Ch 4",
-    summary = p(
-      strong("Spatial autocorrelation."),
-      " Counts aircraft in a hexagonal grid over the region and tests whether ",
-      "neighbouring hexes have similar values (global Moran's I, Geary's C or ",
-      "Global G), then maps local clusters with Local Moran's I (LISA)."
-    ),
-    controls = function(ns) {
-      tagList(
+  settings_panel(
+    ns,
+    "autocorr",
+    "Autocorrelation",
+    "Ch 4",
+    question = "Do busy areas sit next to other busy areas?",
+    intro = "We cover the region in hexagons, count the aircraft in each, and test whether neighbouring hexes have similar counts.",
+    fields = tagList(
+      setting(
         sliderInput(ns("hex_km"), "Hex size (km)", min = 50, max = 500, value = 150, step = 25),
+        "How wide each hexagon is. Small hexes show more detail but many will be empty; big hexes smooth things out but can hide local hot spots."
+      ),
+      setting(
         checkboxInput(ns("log"), "Use log(count + 1)", value = TRUE),
+        "A few hexes over busy hubs have far more aircraft than the rest. The log scale stops those few from dominating the result."
+      ),
+      setting(
         selectInput(
           ns("weights"),
           "Spatial weights",
@@ -37,124 +46,164 @@ autocorr_ui <- function(id) {
             "K nearest neighbours" = "knn",
             "Distance band" = "dist",
             "Inverse distance" = "idw"
-          )
+          ),
+          selectize = FALSE
         ),
-        conditionalPanel(
-          "input.weights == 'knn'",
-          ns = ns,
-          numericInput(ns("k"), "k", value = 6, min = 1, max = 20)
-        ),
-        conditionalPanel(
-          "input.weights == 'dist' || input.weights == 'idw'",
-          ns = ns,
-          numericInput(ns("d"), "Distance band d (km)", value = 300, min = 50)
-        ),
-        selectInput(
+        "Who counts as a neighbour. Queen: hexes that touch. K nearest: the k closest hexes, touching or not. Distance band: every hex within a set distance. Inverse distance: the same, but closer hexes count for more."
+      ),
+      conditionalPanel(
+        "input.weights == 'knn'",
+        ns = ns,
+        setting(
+          numericInput(ns("k"), "k", value = 6, min = 1, max = 20),
+          "How many of the closest hexes count as neighbours."
+        )
+      ),
+      conditionalPanel(
+        "input.weights == 'dist' || input.weights == 'idw'",
+        ns = ns,
+        setting(
+          numericInput(ns("d"), "Distance band d (km)", value = 300, min = 50),
+          "Hexes whose centres are closer than this count as neighbours. Too small and some hexes end up with none."
+        )
+      ),
+      setting(
+        segmented_input(
           ns("statistic"),
           "Global statistic",
           c("Moran's I" = "moran", "Geary's C" = "geary", "Global G" = "globalg")
         ),
-        # Global G needs binary weights, and spdep has no permutation test
-        # for it, so those choices are hidden (the server enforces them too).
-        conditionalPanel(
-          "input.statistic != 'globalg'",
-          ns = ns,
-          radioButtons(
-            ns("style"),
-            "Weights style",
-            c("W (row-standardised)" = "W", "B (binary)" = "B"),
-            inline = TRUE
-          ),
-          radioButtons(
-            ns("inference"),
-            "Inference",
-            c("Analytic" = "analytic", "Permutation" = "perm"),
-            inline = TRUE
-          ),
-          conditionalPanel(
-            "input.inference == 'perm'",
-            ns = ns,
-            numericInput(ns("nsim"), "Simulations", value = 499, min = 99, max = 999, step = 100)
-          )
-        ),
-        conditionalPanel(
-          "input.statistic == 'globalg'",
-          ns = ns,
-          p(class = "small text-muted", "Global G uses binary weights (style B) and the analytic test.")
-        ),
-        alpha_input(ns)
-      )
-    },
-    # The result cards are fixed and only shown after a successful run (a
-    # leaflet map built inside renderUI sizes itself before it is visible).
-    results = div(
-      uiOutput(ns("status")),
+        "Moran's I compares each hex with the average of its neighbours. Geary's C looks at the differences between neighbours instead. Global G asks whether the high counts specifically are bunched together."
+      ),
+      # Global G needs binary weights, and spdep has no permutation test
+      # for it, so those choices are hidden (the server enforces them too).
       conditionalPanel(
-        "output.ok",
+        "input.statistic != 'globalg'",
         ns = ns,
-        card(card_header("Interpretation"), uiOutput(ns("interpretation"))),
-        layout_columns(
-          col_widths = c(5, 7),
-          card(card_header("Global test"), tableOutput(ns("global")), uiOutput(ns("setup"))),
-          card(card_header("Moran scatterplot"), plotOutput(ns("scatter"), height = "320px"))
+        setting(
+          segmented_input(ns("style"), "Weights style", c("W (row-standardised)" = "W", "B (binary)" = "B")),
+          "W shares a weight of 1 among each hex's neighbours, so a hex with many neighbours does not count for more. B gives every neighbour a weight of 1."
         ),
-        card(
-          full_screen = TRUE,
-          card_header("LISA cluster map"),
-          leaflet::leafletOutput(ns("map"), height = "480px")
+        setting(
+          segmented_input(ns("inference"), "Inference", c("Analytic" = "analytic", "Permutation" = "perm")),
+          "How to get the p-value. Analytic uses a formula and is instant. Permutation shuffles the counts around the map many times and checks how unusual the real pattern is: slower, but it makes fewer assumptions."
         ),
-        card(
-          card_header("Strongest local clusters (top 10 significant hexes by local I)"),
-          tableOutput(ns("top"))
+        conditionalPanel(
+          "input.inference == 'perm'",
+          ns = ns,
+          setting(
+            numericInput(ns("nsim"), "Simulations", value = 499, min = 99, max = 999, step = 100),
+            "How many times to shuffle. More shuffles give a steadier p-value but take longer."
+          )
         )
+      ),
+      conditionalPanel(
+        "input.statistic == 'globalg'",
+        ns = ns,
+        p(class = "setting-note", "Global G uses binary weights (style B) and the analytic test.")
+      ),
+      setting(
+        alpha_input(ns),
+        "How strong the evidence must be before we call a pattern real. 0.05 means we accept a 5% chance of seeing a pattern that is really just chance."
       )
     )
   )
 }
 
-autocorr_server <- function(id, aircraft, region_id) {
+# The full results, in the order the old tab showed them.
+autocorr_results_ui <- function(id) {
+  ns <- NS(id)
+  results_card(
+    ns,
+    full = div(
+      class = "results-grid",
+      div(class = "results-section span-all", h5("Interpretation"), uiOutput(ns("interpretation"))),
+      div(class = "results-section", h5("Global test"), tableOutput(ns("global")), uiOutput(ns("setup"))),
+      div(class = "results-section", h5("Moran scatterplot"), plotOutput(ns("scatter"), height = "260px")),
+      div(
+        class = "results-section span-all",
+        h5("Strongest local clusters"),
+        p(class = "results-note", "The 10 significant hexes with the largest local I."),
+        tableOutput(ns("top"))
+      )
+    )
+  )
+}
+
+autocorr_server <- function(id, aircraft, region_id, active) {
   moduleServer(id, function(input, output, session) {
-    result <- reactive({
-      globalg <- input$statistic == "globalg"
-      withProgress(message = "Running the autocorrelation analysis...", {
+    # Only inputs and the already-filtered aircraft: debounce reads this
+    # even while the tab is closed, so nothing heavy goes in here.
+    params <- reactive(list(
+      aircraft = aircraft(),
+      hex_km = input$hex_km,
+      log = input$log,
+      weights = input$weights,
+      k = input$k,
+      d = input$d,
+      statistic = input$statistic,
+      style = input$style,
+      inference = input$inference,
+      nsim = input$nsim,
+      alpha = input$alpha
+    ))
+
+    result <- method_runner(
+      input,
+      session,
+      "autocorr",
+      active,
+      region_id,
+      params,
+      compute = function(p, region) {
+        if (nrow(p$aircraft) == 0) {
+          return(no_aircraft_result())
+        }
+        globalg <- p$statistic == "globalg"
         run_safely({
-          region <- region_id()
-          pts <- to_region_sf(aircraft(), region)
-          hexes <- hex_counts(pts, region_window(region), input$hex_km, log = isTRUE(input$log))
+          pts <- to_region_sf(p$aircraft, region)
+          hexes <- hex_counts(pts, region_window(region), p$hex_km, log = isTRUE(p$log))
           res <- run_autocorr(
             hexes,
-            weights = input$weights,
-            k = input$k,
-            d_km = input$d,
-            style = if (globalg) "B" else input$style,
-            statistic = input$statistic,
-            inference = if (globalg) "analytic" else input$inference,
-            nsim = input$nsim,
-            alpha = as.numeric(input$alpha)
+            weights = p$weights,
+            k = p$k,
+            d_km = p$d,
+            style = if (globalg) "B" else p$style,
+            statistic = p$statistic,
+            inference = if (globalg) "analytic" else p$inference,
+            nsim = p$nsim,
+            alpha = as.numeric(p$alpha)
           )
-          res$hex_km <- input$hex_km
-          res$value_label <- if (isTRUE(input$log)) "log(count + 1)" else "Aircraft count"
+          res$hex_km <- p$hex_km
+          res$value_label <- if (isTRUE(p$log)) "log(count + 1)" else "Aircraft count"
+          # The card describes the run it shows, not inputs changed since.
+          res$statistic <- p$statistic
+          res$alpha <- as.numeric(p$alpha)
           res
         })
-      })
-    }) |>
-      bindEvent(input$run)
+      }
+    )
 
+    # Every output and the map layer start with req(active()), so a closed
+    # tab never runs the method.
     ok_result <- reactive({
+      req(active())
       res <- result()
       req(isTRUE(res$ok))
       res$value
     })
 
-    # Drives the conditionalPanel in the UI, so it must update while hidden.
-    output$ok <- reactive(isTRUE(result()$ok))
-    outputOptions(output, "ok", suspendWhenHidden = FALSE)
-
-    output$status <- renderUI({
-      if (is.null(input$run) || input$run == 0) {
-        return(card(p(class = "text-muted mb-0", "Choose the parameters and click Run analysis.")))
+    output$short <- renderUI({
+      req(active())
+      res <- result()
+      if (!isTRUE(res$ok)) {
+        return(region_alert(res, "autocorr"))
       }
-      result_alert(result())
+      value <- res$value
+      summary_ui(
+        autocorr_summary(value, value$statistic, value$alpha),
+        legend_ui(lisa_colours, names(lisa_colours))
+      )
     })
 
     output$interpretation <- renderUI(p(class = "mb-0", ok_result()$interpretation))
@@ -184,7 +233,7 @@ autocorr_server <- function(id, aircraft, region_id) {
         "Every hex has at least one neighbour."
       }
       p(
-        class = "small text-muted mb-0",
+        class = "results-note",
         paste0(
           nrow(res$lisa), " hexes of ", res$hex_km, " km, value = ", res$value_label, ". ",
           "Weights: ", res$weights_label, ". ", isolates
@@ -206,8 +255,23 @@ autocorr_server <- function(id, aircraft, region_id) {
       abline(v = mean(s$value), h = mean(s$lag), lty = 2, col = "#888888")
     }, bg = "transparent")
 
-    output$map <- leaflet::renderLeaflet({
-      lisa <- sf::st_transform(ok_result()$lisa, 4326)
+    # The LISA layer on the shared map. Coming back to the tab with the same
+    # result keeps the drawn layer (method_runner shows its pane again).
+    drawn <- NULL
+    observe({
+      req(active())
+      res <- result()
+      if (identical(res, drawn)) {
+        return()
+      }
+      drawn <<- res
+      # A failed run keeps the old layer so method_runner can fade its pane
+      # out; the next good run replaces it.
+      if (!isTRUE(res$ok)) {
+        return()
+      }
+      proxy <- leaflet::clearGroup(shared_map_proxy(session), "autocorr")
+      lisa <- sf::st_transform(res$value$lisa, 4326)
       pal <- leaflet::colorFactor(unname(lisa_colours), levels = names(lisa_colours))
       popup <- paste0(
         "<b>Hex ", lisa$hex_id, "</b>",
@@ -216,22 +280,17 @@ autocorr_server <- function(id, aircraft, region_id) {
         "<br>p-value: ", format_p(lisa$p_value),
         "<br>Cluster: ", lisa$cluster
       )
-      leaflet::leaflet(lisa) |>
-        leaflet::addProviderTiles(leaflet::providers$Esri.WorldGrayCanvas) |>
-        leaflet::addPolygons(
-          fillColor = ~ pal(cluster),
-          fillOpacity = 0.7,
-          color = "#ffffff",
-          weight = 0.5,
-          popup = popup
-        ) |>
-        leaflet::addLegend(
-          position = "bottomright",
-          colors = unname(lisa_colours),
-          labels = names(lisa_colours),
-          title = "LISA cluster",
-          opacity = 1
-        )
+      leaflet::addPolygons(
+        proxy,
+        data = lisa,
+        fillColor = ~ pal(cluster),
+        fillOpacity = 0.7,
+        color = "#ffffff",
+        weight = 0.5,
+        popup = popup,
+        group = "autocorr",
+        options = leaflet::pathOptions(pane = "autocorr")
+      )
     })
 
     output$top <- renderTable(

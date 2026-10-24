@@ -1,5 +1,10 @@
 # STAT3037A Global Flights dashboard.
 # Files in R/ are sourced automatically by Shiny before this file runs.
+#
+# Layout: one full-screen Leaflet map (R/map_shared.R) behind floating panels:
+# the top bar (brand, tab bar, data badge, refresh, dark mode), the left
+# column (filters, then each tab's settings) and each tab's content. The look
+# and the client-side behaviour live in www/app.css and www/app.js.
 
 library(shiny)
 library(bslib)
@@ -10,84 +15,137 @@ poll_ms <- 10 * 60 * 1000
 airlines <- load_airlines()
 airports <- load_airports()
 
+method_tab_ids <- app_tabs$id[app_tabs$kind == "method"]
+
 theme <- bs_theme(
   version = 5,
-  primary = "#1d3557",
-  secondary = "#457b9d",
-  "navbar-bg" = "#1d3557"
+  primary = "#1c2430",
+  base_font = font_google("Inter", local = FALSE),
+  "border-radius" = "8px"
 )
 
-# Dark mode (the sun/moon switch in the navbar). Bootstrap themes the page;
-# these rules handle the Leaflet maps. Inverting the light basemap tiles gives
-# a dark basemap without loading a second tile set.
-theme <- bs_add_rules(
-  theme,
-  '[data-bs-theme="dark"] {
-    .leaflet-container { background: #1a1a1a; }
-    .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9); }
-    .leaflet-bar a, .info.legend, .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-      background: var(--bs-body-bg);
-      color: var(--bs-body-color);
-    }
-    .study-window { stroke: #a8dadc; }
-  }'
+top_bar <- div(
+  class = "top-bar",
+  float_panel(
+    class = "brand enter",
+    bs_icon("airplane-fill", class = "brand-icon"),
+    span(class = "brand-name", "Global Flights")
+  ),
+  float_panel(
+    class = "tab-bar enter",
+    span(class = "tab-slider"),
+    lapply(seq_len(nrow(app_tabs)), function(i) {
+      tags$button(
+        type = "button",
+        class = "tab-btn",
+        `data-tab` = app_tabs$id[i],
+        app_tabs$label[i]
+      )
+    })
+  ),
+  div(
+    class = "top-right",
+    uiOutput("source_badge", class = "enter"),
+    float_panel(
+      class = "icon-panel enter",
+      tooltip(
+        actionButton(
+          "refresh",
+          label = NULL,
+          icon = bs_icon("arrow-clockwise"),
+          class = "icon-btn",
+          `aria-label` = "Refresh data"
+        ),
+        "Refresh data",
+        placement = "bottom"
+      )
+    ),
+    # Opens in light mode (clearer on a projector); the switch flips it.
+    float_panel(class = "icon-panel enter", input_dark_mode(id = "dark_mode", mode = "light"))
+  )
 )
 
-sidebar_filters <- sidebar(
-  title = "Filters",
-  width = 280,
-  selectInput("region", "Region", region_choices()),
+filters_panel <- fold_panel(
+  "Filters",
+  selectInput("region", "Region", region_choices(), selectize = FALSE),
   selectizeInput(
     "airline",
     "Airline",
     choices = NULL,
     multiple = TRUE,
-    options = list(placeholder = "All (type a name or code)")
+    # The dropdown is attached to <body> so the scrolling left column does
+    # not clip it.
+    options = list(placeholder = "All (type a name or code)", dropdownParent = "body")
   ),
-  checkboxGroupInput(
-    "categories",
-    "Category",
-    choices = category_levels,
-    selected = category_levels
+  div(
+    class = "chips",
+    checkboxGroupInput(
+      "categories",
+      "Category",
+      choices = category_levels,
+      selected = category_levels
+    )
   ),
-  checkboxGroupInput(
-    "bands",
-    "Altitude band",
-    choices = altitude_levels,
-    selected = altitude_levels
+  div(
+    class = "chips",
+    checkboxGroupInput(
+      "bands",
+      "Altitude band",
+      choices = altitude_levels,
+      selected = altitude_levels
+    )
   ),
   input_switch("airborne_only", "Airborne only", value = FALSE),
-  hr(),
-  actionButton("refresh", "Refresh data", icon = icon("rotate"), class = "btn-outline-primary"),
   p(
-    class = "small text-muted",
+    class = "panel-note",
     "Live data refreshes every 10 minutes. Filters apply to every tab; airport points ignore the airline, category and altitude filters."
   )
 )
 
-ui <- page_navbar(
-  title = tagList(bs_icon("airplane-engines"), "Global Flights"),
-  window_title = "Global Flights",
+# Each method tab's settings panel (settings_panel(), which doubles as the
+# setup box) goes in its own pane here; the other tabs' panes stay empty.
+settings_ui <- list(
+  autocorr = autocorr_settings_ui("autocorr"),
+  quadrat = quadrat_settings_ui("quadrat"),
+  regression = regression_settings_ui("regression")
+)
+settings_panes <- lapply(app_tabs$id, function(id) nav_panel_hidden(value = id, settings_ui[[id]]))
+
+left_col <- div(
+  class = "left-col",
+  filters_panel,
+  do.call(navset_hidden, c(list(id = "settings_nav", selected = "home"), settings_panes))
+)
+
+content <- navset_hidden(
+  id = "tab",
+  selected = "home",
+  nav_panel_hidden("home", home_ui("home")),
+  nav_panel_hidden("live", mod_live_ui("live")),
+  nav_panel_hidden("autocorr", autocorr_results_ui("autocorr")),
+  nav_panel_hidden("quadrat", quadrat_results_ui("quadrat")),
+  nav_panel_hidden("regression", regression_results_ui("regression")),
+  nav_panel_hidden("about", about_ui("about"))
+)
+
+ui <- page(
+  title = "Global Flights",
   theme = theme,
-  sidebar = sidebar_filters,
-  fillable = "Live Map",
-  nav_panel("Live Map", icon = bs_icon("map"), mod_live_ui("live")),
-  nav_panel("Autocorrelation", icon = bs_icon("grid-3x3"), autocorr_ui("autocorr")),
-  nav_panel("Point Patterns", icon = bs_icon("dot"), quadrat_ui("quadrat")),
-  nav_panel("Spatial Regression", icon = bs_icon("graph-up"), regression_ui("regression")),
-  nav_panel("About", icon = bs_icon("info-circle"), about_ui("about")),
-  nav_spacer(),
-  nav_item(uiOutput("source_badge")),
-  # Opens in light mode (clearer on a projector); the switch flips it.
-  # The style makes the icon white on the navy navbar (it defaults to grey).
-  nav_item(input_dark_mode(
-    id = "dark_mode",
-    mode = "light",
-    style = "--text-1: #ffffff; --text-2: rgba(255, 255, 255, 0.85);"
-  ))
+  tags$head(
+    tags$link(rel = "stylesheet", href = "app.css"),
+    tags$script(src = "app.js"),
+    tags$script(src = "planes.js"),
+    tags$script(src = "tour.js")
+  ),
+  div(id = "map-wrap", leafletOutput("map", height = "100%")),
+  top_bar,
+  left_col,
+  content
 )
 
 server <- function(input, output, session) {
+  output$map <- renderLeaflet(shared_map())
+
   snapshot <- reactiveVal(NULL)
 
   # Re-read the shared cache every 10 minutes. get_states() only calls the
@@ -114,6 +172,13 @@ server <- function(input, output, session) {
 
   states <- reactive(prep_states(req(snapshot())$data, airlines))
 
+  # Identifies the snapshot, for the planes' glide clock: the same data
+  # re-delivered (sample snapshot, cached copy) keeps the same id.
+  snapshot_id <- reactive({
+    s <- req(snapshot())
+    paste(as.numeric(s$time), s$fetched_at %||% "")
+  })
+
   # Offer the airlines present in the data by name, most common first.
   # Values stay as ICAO codes, so filtering is unchanged.
   observe({
@@ -126,44 +191,139 @@ server <- function(input, output, session) {
     )
   })
 
-  aircraft <- reactive({
-    # Unticking every category or altitude band means "show nothing", not
-    # "no filter".
+  # The sidebar filters. Unticking every category or altitude band means
+  # "show nothing", not "no filter". region_id = "world" keeps all regions.
+  filtered_aircraft <- function(region_id) {
     if (length(input$categories) == 0 || length(input$bands) == 0) {
       return(states()[0, ])
     }
     filter_states(
       states(),
-      region_id = input$region,
+      region_id = region_id,
       airlines = input$airline,
       bands = input$bands,
       categories = input$categories,
       airborne_only = input$airborne_only
     )
+  }
+
+  aircraft <- reactive(filtered_aircraft(input$region))
+
+  # For Home, which must not follow the region (a method run sets it): the
+  # hero count is the world total under the category/band filters.
+  world_aircraft <- reactive(filtered_aircraft("world"))
+
+  # Tabs. Any element with data-tab="<id>" sends tab_click (www/app.js).
+  # Method modules get active = reactive(active_tab() == "<id>").
+  active_tab <- reactiveVal("home")
+
+  observeEvent(input$tab_click, {
+    id <- input$tab_click
+    req(id %in% app_tabs$id)
+    nav_select("tab", id)
+    nav_select("settings_nav", id)
+    active_tab(id)
+    session$sendCustomMessage("tab-changed", list(tab = id))
   })
 
-  mod_live_server("live", aircraft = aircraft, region_id = reactive(input$region))
-  autocorr_server("autocorr", aircraft = aircraft, region_id = reactive(input$region))
-  quadrat_server("quadrat", aircraft = aircraft, region_id = reactive(input$region), airports = airports)
-  regression_server("regression", aircraft = aircraft, region_id = reactive(input$region), airports = airports)
+  # A region button in a method tab's "region refused" message
+  # (region_alert(), www/app.js) sets the shared region filter.
+  observeEvent(input$region_pick, {
+    req(input$region_pick %in% regions$id)
+    updateSelectInput(session, "region", selected = input$region_pick)
+  })
+
+  # The planes and their altitude legend show on Home and the Live Map only.
+  observe({
+    planes_on <- active_tab() %in% c("home", "live")
+    set_pane(session, "planes", if (planes_on) "shown" else "hidden")
+    proxy <- shared_map_proxy(session)
+    if (planes_on) {
+      addLegend(
+        proxy,
+        position = "bottomright",
+        colors = unname(altitude_colours),
+        labels = names(altitude_colours),
+        title = "Altitude",
+        opacity = 1,
+        layerId = "altitude-legend"
+      )
+    } else {
+      removeControl(proxy, "altitude-legend")
+    }
+  })
+
+  # Glide to the region when it changes, or when a method tab opens; Home
+  # always shows the world, whatever a method run left the map on.
+  last_region <- NULL
+  observeEvent(list(input$region, active_tab()), {
+    req(input$region)
+    region_changed <- !identical(input$region, last_region)
+    last_region <<- input$region
+    if (active_tab() == "home") {
+      fly_to_region(shared_map_proxy(session), "world")
+    } else if (region_changed || active_tab() %in% method_tab_ids) {
+      fly_to_region(shared_map_proxy(session), input$region)
+    }
+  })
+
+  home_server("home", aircraft = world_aircraft, tour_aircraft = states)
+  # Home shows planes everywhere (its count is the world total); the Live
+  # Map and the method tabs follow the region.
+  mod_live_server(
+    "live",
+    aircraft = aircraft,
+    snapshot_id = snapshot_id,
+    planes = reactive(if (active_tab() == "home") world_aircraft() else aircraft())
+  )
+  autocorr_server(
+    "autocorr",
+    aircraft = aircraft,
+    region_id = reactive(input$region),
+    active = reactive(active_tab() == "autocorr")
+  )
+  quadrat_server(
+    "quadrat",
+    aircraft = aircraft,
+    region_id = reactive(input$region),
+    airports = airports,
+    active = reactive(active_tab() == "quadrat")
+  )
+  regression_server(
+    "regression",
+    aircraft = aircraft,
+    region_id = reactive(input$region),
+    airports = airports,
+    active = reactive(active_tab() == "regression")
+  )
 
   output$source_badge <- renderUI({
     s <- req(snapshot())
     when <- format(s$time, "%H:%M UTC")
+    # The time is a separate span so narrow screens can hide it; the tooltip
+    # always has the full text.
+    badge <- function(class, icon, label, time, title = NULL) {
+      float_panel(
+        class = paste("source-badge", class),
+        title = paste0(c(paste0(label, time), title), collapse = ". "),
+        icon,
+        span(
+          class = "badge-text",
+          span(class = "badge-label", label, .noWS = "outside"),
+          span(class = "badge-time", time, .noWS = "outside")
+        )
+      )
+    }
     switch(
       s$source,
-      live = span(class = "badge text-bg-success", bs_icon("broadcast"), paste(" Live, updated", when)),
-      cache = span(
-        class = "badge text-bg-warning",
-        title = s$message,
-        bs_icon("clock-history"),
-        paste(" Cached, from", when)
-      ),
-      sample = span(
-        class = "badge text-bg-secondary",
-        title = s$message,
+      live = badge("badge-live", span(class = "live-dot"), "Live", paste(", updated", when)),
+      cache = badge("badge-cache", bs_icon("clock-history"), "Cached", paste(", from", when), s$message),
+      sample = badge(
+        "badge-sample",
         bs_icon("archive"),
-        paste(" Sample snapshot,", format(s$time, "%d %b %Y %H:%M UTC"))
+        "Sample snapshot",
+        paste(",", format(s$time, "%d %b %Y %H:%M UTC")),
+        s$message
       )
     )
   })

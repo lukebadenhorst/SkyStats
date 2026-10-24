@@ -1,8 +1,15 @@
-# Live Map tab: KPI cards, the aircraft map and a table of the filtered set.
+# Live Map tab: the aircraft on the shared map, and a results card with the
+# aircraft count, the share airborne and the top origin countries. The card
+# expands to a table of the filtered set.
 #
-# mod_live_server() takes two reactives from app.R:
-#   aircraft  prepped + filtered state vectors
-#   region_id the selected region, used to zoom the map
+# mod_live_server() takes three reactives from app.R:
+#   aircraft     prepped + filtered state vectors (the card and the table)
+#   planes       the aircraft drawn on the map; defaults to `aircraft`, but
+#                Home shows every region
+#   snapshot_id  changes only when a new snapshot arrives (the planes glide
+#                from the moment it reached the browser, www/planes.js)
+# app.R shows and hides the "planes" pane and the altitude legend, and flies
+# the map to the region.
 
 altitude_colours <- c(
   "On ground" = "#9aa0a6",
@@ -12,116 +19,128 @@ altitude_colours <- c(
   "> 9,000 m" = "#5e60ce",
   "Unknown" = "#d0d0d0"
 )
-altitude_palette <- leaflet::colorFactor(
-  unname(altitude_colours),
-  levels = names(altitude_colours)
+# Brighter versions for the dark basemap (www/planes.js picks by theme).
+altitude_colours_dark <- c(
+  "On ground" = "#c3c8cd",
+  "< 3,000 m" = "#f6b57f",
+  "3,000-9,000 m" = "#4fd1c0",
+  "> 9,000 m" = "#8f91ff",
+  "Unknown" = "#e0e0e0"
 )
 
 mod_live_ui <- function(id) {
   ns <- NS(id)
-  tagList(
-    layout_columns(
-      fill = FALSE,
-      col_widths = c(3, 3, 6),
-      value_box(
-        title = "Aircraft in view",
-        value = textOutput(ns("n_aircraft")),
-        showcase = bs_icon("airplane"),
-        theme = "primary"
-      ),
-      value_box(
-        title = "Airborne",
-        value = textOutput(ns("pct_airborne")),
-        showcase = bs_icon("cloud-arrow-up"),
-        theme = "teal"
-      ),
-      value_box(
-        title = "Top origin countries",
-        value = textOutput(ns("top_country")),
-        uiOutput(ns("top_countries")),
-        showcase = bs_icon("globe2")
-      )
+  float_panel(
+    class = "results-card live-card",
+    div(class = "card-label", "Aircraft in view"),
+    div(
+      class = "big-number",
+      tagAppendAttributes(textOutput(ns("n_aircraft"), inline = TRUE), class = "count-up")
     ),
-    navset_card_tab(
-      full_screen = TRUE,
-      nav_panel("Map", leafletOutput(ns("map"), height = "100%")),
-      nav_panel("Table", DT::DTOutput(ns("table")))
-    )
+    div(
+      class = "card-stat",
+      div(class = "card-label", "Airborne"),
+      div(
+        class = "stat-number",
+        tagAppendAttributes(textOutput(ns("pct_airborne"), inline = TRUE), class = "count-up")
+      ),
+      uiOutput(ns("airborne_bar"))
+    ),
+    div(
+      class = "card-stat",
+      div(class = "card-label", "Top origin countries"),
+      uiOutput(ns("top_countries"))
+    ),
+    tags$button(
+      type = "button",
+      class = "btn-more",
+      `data-more` = "Show all aircraft",
+      `data-less` = "Show less",
+      "Show all aircraft"
+    ),
+    div(class = "card-more", div(class = "card-more-inner", DT::DTOutput(ns("table"))))
   )
 }
 
-mod_live_server <- function(id, aircraft, region_id) {
+mod_live_server <- function(id, aircraft, snapshot_id, planes = aircraft) {
   moduleServer(id, function(input, output, session) {
     output$n_aircraft <- renderText(comma(nrow(aircraft())))
 
-    output$pct_airborne <- renderText({
+    share_airborne <- reactive({
       df <- aircraft()
-      if (nrow(df) == 0) "-" else sprintf("%.0f%%", 100 * mean(df$airborne))
+      if (nrow(df) == 0) NA_real_ else 100 * mean(df$airborne)
+    })
+
+    output$pct_airborne <- renderText({
+      pct <- share_airborne()
+      if (is.na(pct)) "-" else sprintf("%.0f%%", pct)
+    })
+
+    # A thin bar under the percentage; www/app.css grows it from zero.
+    output$airborne_bar <- renderUI({
+      pct <- share_airborne()
+      div(class = "stat-bar", tags$i(style = sprintf("width: %.1f%%", if (is.na(pct)) 0 else pct)))
     })
 
     countries <- reactive(top_countries(aircraft(), 5))
 
-    output$top_country <- renderText({
-      tc <- countries()
-      if (length(tc) == 0) "-" else names(tc)[1]
-    })
-
     output$top_countries <- renderUI({
       tc <- countries()
       if (length(tc) == 0) {
-        return(NULL)
+        return(div(class = "stat-number", "-"))
       }
-      p(
-        class = "small mb-0",
-        paste0(names(tc), " (", comma(as.integer(tc)), ")", collapse = " · ")
+      tags$ol(
+        class = "country-list",
+        lapply(seq_along(tc), function(i) {
+          tags$li(span(names(tc)[i]), span(class = "country-count", comma(as.integer(tc[[i]]))))
+        })
       )
     })
 
-    output$map <- renderLeaflet({
-      leaflet(options = leafletOptions(
-        preferCanvas = TRUE,
-        worldCopyJump = TRUE,
-        zoomSnap = 0.25,
-        zoomDelta = 0.5
-      )) |>
-        addProviderTiles(providers$Esri.WorldGrayCanvas) |>
-        setView(lng = 10, lat = 25, zoom = 2) |>
-        addLegend(
-          position = "bottomright",
-          colors = unname(altitude_colours),
-          labels = names(altitude_colours),
-          title = "Altitude",
-          opacity = 1
+    # The aircraft as plane icons on the shared map's "planes" pane, drawn
+    # and animated in the browser by www/planes.js. I() keeps length-0 and
+    # length-1 vectors as JSON arrays. A filter change resends the same
+    # snapshot_id, so the planes keep gliding instead of snapping back.
+    # rev numbers each message. The popups are not sent with it (megabytes
+    # for thousands of planes): a click asks for one (below).
+    rev <- 0
+    sent <- NULL
+    observe({
+      df <- planes()
+      rev <<- rev + 1
+      sent <<- df
+      session$sendCustomMessage(
+        "planes-data",
+        list(
+          rev = rev,
+          click_input = session$ns("plane_click"),
+          snapshot = snapshot_id(),
+          lon = I(round(df$longitude, 5)),
+          lat = I(round(df$latitude, 5)),
+          hdg = I(round(df$true_track, 1)),
+          spd = I(round(df$velocity, 1)),
+          alt = I(round(df$altitude)),
+          band = I(as.character(df$altitude_band)),
+          ground = I(df$on_ground %in% TRUE),
+          callsign = I(df$callsign),
+          palette = list(light = as.list(altitude_colours), dark = as.list(altitude_colours_dark))
         )
+      )
     })
 
-    observe({
-      df <- aircraft()
-      proxy <- leafletProxy("map", data = df) |> clearGroup("aircraft")
-      if (nrow(df) == 0) {
+    # A click on a plane (www/planes.js): answer with that plane's popup, from
+    # the data the browser is showing. A click on older data (the filters
+    # changed since) gets no answer.
+    observeEvent(input$plane_click, {
+      click <- input$plane_click
+      i <- suppressWarnings(as.integer(click$i))
+      if (is.null(sent) || !identical(as.numeric(click$rev), rev) || length(i) != 1 || is.na(i) || i < 1 || i > nrow(sent)) {
         return()
       }
-      proxy |>
-        addCircleMarkers(
-          lng = ~longitude,
-          lat = ~latitude,
-          radius = 3,
-          stroke = FALSE,
-          fillOpacity = 0.8,
-          fillColor = ~ altitude_palette(as.character(altitude_band)),
-          popup = aircraft_popup(df),
-          group = "aircraft"
-        )
-    })
-
-    observe({
-      r <- get_region(region_id())
-      proxy <- leafletProxy("map")
-      if (r$id == "world") {
-        setView(proxy, lng = 10, lat = 25, zoom = 2)
-      } else {
-        fitBounds(proxy, r$lon_min, r$lat_min, r$lon_max, r$lat_max)
-      }
+      session$sendCustomMessage(
+        "plane-popup",
+        list(rev = rev, i = i, html = aircraft_popup(sent[i, , drop = FALSE]))
+      )
     })
 
     output$table <- DT::renderDT({

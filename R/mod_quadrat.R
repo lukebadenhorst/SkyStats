@@ -1,124 +1,164 @@
 # Point Patterns tab (Ch 7): the quadrat test for complete spatial
-# randomness, on airborne aircraft or airports. The statistics are in
-# R/stats_quadrat.R.
+# randomness, on airborne aircraft or airports, drawn on the shared map.
+# The statistics are in R/stats_quadrat.R.
 #
+# Three parts, all with module id "quadrat" (the method name):
+#   quadrat_settings_ui()  the settings panel, which is also the setup box
+#   quadrat_results_ui()   the results card
+#   quadrat_server()       runs the method and draws the map layer
 # quadrat_server() takes from app.R:
 #   aircraft  reactive: prepped + filtered state vectors
 #   region_id reactive: the selected region
 #   airports  data.frame with longitude, latitude and type (not reactive)
+#   active    reactive: TRUE while the tab is open
 #
 # The test runs over quadrat_window(), a rectangle inside the region, so
 # every quadrat has the same area (see R/stats_quadrat.R).
 
-quadrat_ui <- function(id) {
+quadrat_settings_ui <- function(id) {
   ns <- NS(id)
-  method_tab_ui(
-    id,
-    chapter = "Ch 7",
-    summary = p(
-      strong("Quadrat test for complete spatial randomness (CSR)."),
-      " Splits a rectangle inside the region into an nx by ny grid of equal quadrats, ",
-      "counts the points in each, and tests the counts against a homogeneous Poisson ",
-      "process with the chi-squared test and the variance-to-mean ratio ",
-      "(VTMR: < 1 regular, about 1 random, > 1 clustered)."
-    ),
-    controls = function(ns) {
-      tagList(
-        radioButtons(
+  settings_panel(
+    ns,
+    "quadrat",
+    "Point Patterns",
+    "Ch 7",
+    question = "Are the points spread at random?",
+    intro = "We lay a grid of equal squares (quadrats) over the region, count the points in each, and compare the counts with what pure chance would give.",
+    fields = tagList(
+      setting(
+        segmented_input(
           ns("points"),
           "Point set",
           c("Airborne aircraft" = "aircraft", "Airports" = "airports")
         ),
-        conditionalPanel(
-          "input.points == 'airports'",
-          ns = ns,
+        "Which points to test: the aircraft currently in the air, or the airports on the ground."
+      ),
+      conditionalPanel(
+        "input.points == 'airports'",
+        ns = ns,
+        setting(
           checkboxGroupInput(
             ns("airport_types"),
             "Airport types",
             c("Large" = "large_airport", "Medium" = "medium_airport"),
             selected = c("large_airport", "medium_airport")
           ),
-          p(class = "small text-muted", "Airline, category and altitude filters don't apply to airports.")
-        ),
-        sliderInput(ns("nx"), "Quadrats across (nx)", min = 2, max = 15, value = 6),
-        sliderInput(ns("ny"), "Quadrats down (ny)", min = 2, max = 15, value = 6),
-        alpha_input(ns)
-      )
-    },
-    # As in the Autocorrelation tab, the result cards are fixed and only
-    # shown after a successful run, so the leaflet map sizes itself properly.
-    results = div(
-      uiOutput(ns("status")),
-      conditionalPanel(
-        "output.ok",
-        ns = ns,
-        card(card_header("Interpretation"), uiOutput(ns("interpretation"))),
-        layout_columns(
-          col_widths = c(6, 6),
-          card(card_header("Chi-squared quadrat test"), tableOutput(ns("chisq"))),
-          card(card_header("Variance-to-mean ratio (VTMR)"), tableOutput(ns("vtmr")))
-        ),
-        card(
-          full_screen = TRUE,
-          card_header("Quadrat counts"),
-          leaflet::leafletOutput(ns("map"), height = "480px"),
-          uiOutput(ns("setup"))
-        ),
-        card(
-          card_header("Quadrat counts against the Poisson expectation"),
-          plotOutput(ns("hist"), height = "320px")
+          "Airline, category and altitude filters don't apply to airports."
         )
+      ),
+      setting(
+        sliderInput(ns("nx"), "Quadrats across (nx)", min = 2, max = 15, value = 6),
+        "How many squares the grid has from west to east. More squares show finer detail, but each holds fewer points."
+      ),
+      setting(
+        sliderInput(ns("ny"), "Quadrats down (ny)", min = 2, max = 15, value = 6),
+        "How many squares the grid has from north to south. The test needs about 5 points per square on average, so a fine grid needs plenty of points."
+      ),
+      setting(
+        alpha_input(ns),
+        "How strong the evidence must be before we call a pattern real. 0.05 means we accept a 5% chance of seeing a pattern that is really just chance."
       )
     )
   )
 }
 
-quadrat_server <- function(id, aircraft, region_id, airports) {
+# The full results: the interpretation, both tests, the setup note and the
+# histogram.
+quadrat_results_ui <- function(id) {
+  ns <- NS(id)
+  results_card(
+    ns,
+    full = div(
+      class = "results-grid",
+      div(class = "results-section span-all", h5("Interpretation"), uiOutput(ns("interpretation"))),
+      div(class = "results-section", h5("Chi-squared quadrat test"), tableOutput(ns("chisq"))),
+      div(class = "results-section", h5("Variance-to-mean ratio (VTMR)"), tableOutput(ns("vtmr"))),
+      div(class = "results-section span-all", uiOutput(ns("setup"))),
+      div(
+        class = "results-section span-all",
+        h5("Quadrat counts against the Poisson expectation"),
+        plotOutput(ns("hist"), height = "260px")
+      )
+    )
+  )
+}
+
+quadrat_server <- function(id, aircraft, region_id, airports, active) {
   moduleServer(id, function(input, output, session) {
-    result <- reactive({
-      withProgress(message = "Running the quadrat test...", {
+    # Only inputs and already-computed data: debounce reads this even while
+    # the tab is closed, so nothing heavy goes in here.
+    params <- reactive(list(
+      aircraft = aircraft(),
+      airports = airports,
+      points = input$points,
+      airport_types = input$airport_types,
+      nx = input$nx,
+      ny = input$ny,
+      alpha = input$alpha
+    ))
+
+    result <- method_runner(
+      input,
+      session,
+      "quadrat",
+      active,
+      region_id,
+      params,
+      compute = function(p, region) {
+        if (p$points != "airports" && nrow(p$aircraft) == 0) {
+          return(no_aircraft_result())
+        }
         run_safely({
-          region <- region_id()
           crs <- region_crs(region)
-          df <- if (input$points == "airports") {
-            airports[airports$type %in% input$airport_types, , drop = FALSE]
+          df <- if (p$points == "airports") {
+            p$airports[p$airports$type %in% p$airport_types, , drop = FALSE]
           } else {
-            a <- aircraft()
+            a <- p$aircraft
             a[a$airborne, , drop = FALSE]
           }
           pts <- to_region_sf(df, region)
           window <- region_window(region)
           rect <- quadrat_window(window)
           X <- as_ppp(pts, rect)
-          res <- run_quadrat(X, nx = input$nx, ny = input$ny, alpha = as.numeric(input$alpha), crs = crs)
+          res <- run_quadrat(X, nx = p$nx, ny = p$ny, alpha = as.numeric(p$alpha), crs = crs)
           res$rect <- rect
           res$points <- sf::st_as_sf(data.frame(x = X$x, y = X$y), coords = c("x", "y"), crs = crs)
           res$n_region <- nrow(pts)
           res$area_share <- as.numeric(sf::st_area(rect) / sf::st_area(window))
-          res$point_label <- if (input$points == "airports") "airports" else "airborne aircraft"
-          res$nx <- input$nx
-          res$ny <- input$ny
+          res$point_label <- if (p$points == "airports") "airports" else "airborne aircraft"
+          res$nx <- p$nx
+          res$ny <- p$ny
+          # The card describes the run it shows, not inputs changed since.
+          res$alpha <- as.numeric(p$alpha)
           res
         })
-      })
-    }) |>
-      bindEvent(input$run)
+      }
+    )
 
+    # Every output and the map layer start with req(active()), so a closed
+    # tab never runs the method.
     ok_result <- reactive({
+      req(active())
       res <- result()
       req(isTRUE(res$ok))
       res$value
     })
 
-    # Drives the conditionalPanel in the UI, so it must update while hidden.
-    output$ok <- reactive(isTRUE(result()$ok))
-    outputOptions(output, "ok", suspendWhenHidden = FALSE)
-
-    output$status <- renderUI({
-      if (is.null(input$run) || input$run == 0) {
-        return(card(p(class = "text-muted mb-0", "Choose the parameters and click Run analysis.")))
+    output$short <- renderUI({
+      req(active())
+      res <- result()
+      if (!isTRUE(res$ok)) {
+        return(region_alert(res, "quadrat"))
       }
-      result_alert(result())
+      value <- res$value
+      counts <- value$tiles$count
+      # Five steps of the layer's viridis scale, from the fewest to the most.
+      steps <- unique(round(seq(min(counts), max(counts), length.out = 5)))
+      pal <- leaflet::colorNumeric("viridis", domain = counts)
+      summary_ui(
+        quadrat_summary(value, value$alpha),
+        legend_ui(pal(steps), steps, title = "Points per quadrat")
+      )
     })
 
     output$interpretation <- renderUI(p(class = "mb-0", ok_result()$interpretation))
@@ -156,7 +196,7 @@ quadrat_server <- function(id, aircraft, region_id, airports) {
       bb <- sf::st_bbox(res$rect)
       side_km <- c(bb[["xmax"]] - bb[["xmin"]], bb[["ymax"]] - bb[["ymin"]]) / 1000 / c(res$nx, res$ny)
       p(
-        class = "small text-muted mb-0 mt-2",
+        class = "results-note",
         paste0(
           res$nx, " × ", res$ny, " quadrats of about ", round(side_km[1]), " × ", round(side_km[2]),
           " km, over a rectangle (outlined) covering ", round(100 * res$area_share), "% of the region. ",
@@ -166,56 +206,79 @@ quadrat_server <- function(id, aircraft, region_id, airports) {
       )
     })
 
-    output$map <- leaflet::renderLeaflet({
-      res <- ok_result()
+    # The quadrat layer on the shared map. Coming back to the tab with the
+    # same result keeps the drawn layer (method_runner shows its pane again).
+    drawn <- NULL
+    observe({
+      req(active())
+      res <- result()
+      if (identical(res, drawn)) {
+        return()
+      }
+      drawn <<- res
+      # A failed run keeps the old layer so method_runner can fade its pane
+      # out; the next good run replaces it.
+      if (!isTRUE(res$ok)) {
+        return()
+      }
+      value <- res$value
       # Add vertices along the straight projected edges so they curve
       # correctly in the web map.
       to_map <- function(g) sf::st_transform(sf::st_segmentize(g, dfMaxLength = 25000), 4326)
-      tiles <- to_map(res$tiles)
-      rect <- to_map(res$rect)
-      centres <- sf::st_transform(sf::st_point_on_surface(sf::st_geometry(res$tiles)), 4326)
-      points <- sf::st_transform(res$points, 4326)
+      tiles <- to_map(value$tiles)
+      rect <- to_map(value$rect)
+      centres <- sf::st_transform(sf::st_point_on_surface(sf::st_geometry(value$tiles)), 4326)
+      points <- sf::st_transform(value$points, 4326)
       pal <- leaflet::colorNumeric("viridis", domain = tiles$count)
       popup <- paste0(
         "Count: ", tiles$count,
         "<br>Expected under CSR: ", sprintf("%.1f", tiles$expected)
       )
 
-      leaflet::leaflet() |>
-        leaflet::addProviderTiles(leaflet::providers$Esri.WorldGrayCanvas) |>
+      proxy <- leaflet::clearGroup(shared_map_proxy(session), "quadrat")
+      proxy |>
         leaflet::addPolygons(
           data = tiles,
           fillColor = ~ pal(count),
           fillOpacity = 0.6,
           color = "#ffffff",
           weight = 1,
-          popup = popup
+          popup = popup,
+          group = "quadrat",
+          options = leaflet::pathOptions(pane = "quadrat")
         ) |>
         # The class lets the dark-mode CSS in app.R lighten the outline.
         leaflet::addPolylines(
           data = sf::st_cast(rect, "LINESTRING"),
           color = "#1d3557",
           weight = 2,
-          options = leaflet::pathOptions(className = "study-window")
+          group = "quadrat",
+          options = leaflet::pathOptions(pane = "quadrat", className = "study-window")
         ) |>
         leaflet::addCircleMarkers(
           data = points,
           radius = 1.5,
           stroke = FALSE,
           fillColor = "#e63946",
-          fillOpacity = 0.6
+          fillOpacity = 0.6,
+          group = "quadrat",
+          options = leaflet::pathOptions(pane = "quadrat")
         ) |>
         leaflet::addLabelOnlyMarkers(
           data = centres,
           label = as.character(tiles$count),
+          group = "quadrat",
+          options = leaflet::markerOptions(pane = "quadrat"),
+          # The labels are tooltips, which Leaflet puts in its tooltip pane
+          # unless told otherwise; in the quadrat pane they fade with the layer.
           labelOptions = leaflet::labelOptions(
+            pane = "quadrat",
             noHide = TRUE,
             direction = "center",
             textOnly = TRUE,
             style = list("font-weight" = "bold", "color" = "#ffffff", "text-shadow" = "0 0 3px #000000")
           )
-        ) |>
-        leaflet::addLegend(position = "bottomright", pal = pal, values = tiles$count, title = "Count", opacity = 1)
+        )
     })
 
     output$hist <- renderPlot({

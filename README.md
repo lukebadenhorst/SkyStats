@@ -2,7 +2,7 @@
 
 An R Shiny dashboard of global air traffic for STAT3037A Introduction to Spatial Statistics (Wits). It shows live aircraft positions from the [OpenSky Network](https://opensky-network.org) and runs three spatial statistics methods from the course on them.
 
-**Status:** the Live Map and the three method tabs (Autocorrelation, Point Patterns, Spatial Regression) work in both live and sample mode. A Home page is still to come. See `docs/design.md` for the design and `docs/plan.md` for the implementation plan.
+**Status:** the Home page with its presentation tour, the Live Map and the three method tabs (Autocorrelation, Point Patterns, Spatial Regression) work in both live and sample mode. The layout is map-first: one full-screen map that every tab draws on, with floating panels on top. See `docs/design.md` for the original design, `docs/plan.md` for the implementation plan, and `docs/superpowers/specs/2026-10-22-map-first-redesign-design.md` for the map-first layout.
 
 ## Run it
 
@@ -30,7 +30,7 @@ No API credentials are needed. Without them the app uses the bundled sample snap
 
 ## Using the method tabs
 
-Pick a region and set the filters in the sidebar first: they apply to every tab. On each method tab, choose the parameters on the left and click **Run analysis**. Nothing is computed until you do. The results show a plain-English interpretation at your chosen α, the test tables, and a map. If the filters leave too little data, a yellow message says what to change.
+The filters in the left column (region, airline, category, altitude band, airborne only) apply to every tab. The first time you open a method tab, a box in the middle of the screen explains each setting; pick the region and settings and click **Run analysis**. Nothing is computed until you do. After that the settings sit in the left column, and changing one re-runs the method on its own after a short pause. The result is drawn on the map, and the card on the right shows the headline numbers and a plain-English interpretation at your chosen α; **Show all results** widens it to the test tables and plots. If the filters leave too little data, a yellow message says what to change.
 
 - **Autocorrelation (Ch 4):** counts aircraft in hexagons over the region and tests whether neighbouring hexes have similar counts (Moran's I, Geary's C or Global G), then maps the LISA clusters. Choose the hex size, the spatial weights and analytic or permutation inference. Needs a region other than World.
 - **Point Patterns (Ch 7):** tests airborne aircraft or airports for complete spatial randomness with the chi-squared quadrat test and the variance-to-mean ratio. Choose the number of quadrats across and down. Needs a region other than World.
@@ -78,7 +78,7 @@ Files in `R/` that start with `stats_` (and the other non-`mod_` files) are pure
 
 | Path | What it holds |
 |---|---|
-| `app.R` | Page layout, global sidebar, wiring of the modules |
+| `app.R` | Page layout (top bar, left column, shared map), filters, wiring of the modules |
 | `R/data_api.R` | OpenSky fetch, parsing, shared 10-minute cache, sample fallback |
 | `R/data_prep.R` | Cleaning, airline codes and names, categories, altitude bands, filters |
 | `R/lookups.R` | Loads the airline and airport lookups in `data/lookups/`; the hand-listed codes for categories |
@@ -88,12 +88,20 @@ Files in `R/` that start with `stats_` (and the other non-`mod_` files) are pure
 | `R/stats_autocorr.R` | Hex counts, global tests and LISA (Ch 4) |
 | `R/stats_quadrat.R` | Quadrat window, quadrat test and VTMR (Ch 7) |
 | `R/stats_regression.R` | Country units, model formula and the regression workflow (Ch 6) |
-| `R/mod_common.R` | Shared layout for the method tabs |
+| `R/app_tabs.R` | The tab list and the regions each method accepts |
+| `R/summaries.R` | Headline numbers and badge wording for the results cards |
+| `R/map_shared.R` | The one full-screen map, its panes and the proxy the modules draw with |
+| `R/mod_common.R` | Shared layout for the method tabs: settings panel, setup box, results card, method runner |
+| `R/mod_home.R` | Home tab: hero, shortcut cards and the "How this app works" tour |
 | `R/mod_live.R` | Live Map tab |
 | `R/mod_autocorr.R` | Autocorrelation tab |
 | `R/mod_quadrat.R` | Point Patterns tab |
 | `R/mod_regression.R` | Spatial Regression tab |
 | `R/mod_about.R` | About tab |
+| `www/app.css` | The look: floating panels, dark mode, animations and reduced motion |
+| `www/app.js` | Tab switching, folding panels, the setup box, results cards, count-ups |
+| `www/planes.js` | The aircraft as plane icons on a canvas layer, with the glide |
+| `www/tour.js` | The Home tour |
 | `data-raw/capture_sample.R` | Captures the bundled sample snapshot |
 | `data-raw/build_lookups.R` | Builds the airline and airport lookups |
 | `data/sample/` | The sample snapshot |

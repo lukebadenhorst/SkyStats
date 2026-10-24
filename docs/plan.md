@@ -650,6 +650,8 @@ test_that("queen weights in Europe run despite the islands", {
 
 ### Task 11: Home (landing) page
 
+> **Superseded (24 Oct 2026)** by the map-first redesign: `docs/superpowers/plans/2026-10-22-map-first-redesign.md` (Task 8 builds the Home page, with a hero, shortcut cards and the "How this app works" tour). The steps below were not followed and are kept for the record.
+
 The structure and navigation only. The text and visual design are placeholders, to be designed later by the group. This task depends on no other task, so a fourth person can do it at any point.
 
 **Files:**
