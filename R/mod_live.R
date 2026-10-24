@@ -2,8 +2,10 @@
 # aircraft count, the share airborne and the top origin countries. The card
 # expands to a table of the filtered set.
 #
-# mod_live_server() takes one reactive from app.R:
-#   aircraft  prepped + filtered state vectors
+# mod_live_server() takes two reactives from app.R:
+#   aircraft     prepped + filtered state vectors
+#   snapshot_id  changes only when a new snapshot arrives (the planes glide
+#                from the moment it reached the browser, www/planes.js)
 # app.R shows and hides the "planes" pane and the altitude legend, and flies
 # the map to the region.
 
@@ -58,7 +60,7 @@ mod_live_ui <- function(id) {
   )
 }
 
-mod_live_server <- function(id, aircraft) {
+mod_live_server <- function(id, aircraft, snapshot_id) {
   moduleServer(id, function(input, output, session) {
     output$n_aircraft <- renderText(comma(nrow(aircraft())))
 
@@ -95,12 +97,14 @@ mod_live_server <- function(id, aircraft) {
 
     # The aircraft as plane icons on the shared map's "planes" pane, drawn
     # and animated in the browser by www/planes.js. I() keeps length-0 and
-    # length-1 vectors as JSON arrays.
+    # length-1 vectors as JSON arrays. A filter change resends the same
+    # snapshot_id, so the planes keep gliding instead of snapping back.
     observe({
       df <- aircraft()
       session$sendCustomMessage(
         "planes-data",
         list(
+          snapshot = snapshot_id(),
           lon = I(round(df$longitude, 5)),
           lat = I(round(df$latitude, 5)),
           hdg = I(round(df$true_track, 1)),

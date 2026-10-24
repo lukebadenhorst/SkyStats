@@ -172,6 +172,13 @@ server <- function(input, output, session) {
 
   states <- reactive(prep_states(req(snapshot())$data, airlines))
 
+  # Identifies the snapshot, for the planes' glide clock: the same data
+  # re-delivered (sample snapshot, cached copy) keeps the same id.
+  snapshot_id <- reactive({
+    s <- req(snapshot())
+    paste(as.numeric(s$time), s$fetched_at %||% "")
+  })
+
   # Offer the airlines present in the data by name, most common first.
   # Values stay as ICAO codes, so filtering is unchanged.
   observe({
@@ -251,7 +258,7 @@ server <- function(input, output, session) {
     }
   })
 
-  mod_live_server("live", aircraft = aircraft)
+  mod_live_server("live", aircraft = aircraft, snapshot_id = snapshot_id)
   autocorr_server(
     "autocorr",
     aircraft = aircraft,

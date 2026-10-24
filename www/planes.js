@@ -190,7 +190,13 @@
       }
       this._maxSpd = maxSpd;
 
-      this._t0 = performance.now();
+      // Glide from when this snapshot reached the browser: a filter change
+      // resends the same snapshot and keeps the clock running.
+      var snapshot = msg.snapshot === undefined ? null : msg.snapshot;
+      if (this._snapshot === undefined || snapshot === null || snapshot !== this._snapshot) {
+        this._t0 = performance.now();
+      }
+      this._snapshot = snapshot;
       this._hideTip();
       this._buildSprites();
       this._draw();
@@ -400,10 +406,12 @@
         rot = this._rot,
         band = this._band;
 
-      if (this._hitX.length < n * 2) {
-        this._hitX = new Float32Array(n * 2);
-        this._hitY = new Float32Array(n * 2);
-        this._hitI = new Int32Array(n * 2);
+      // Room for every plane in every copy of the world that can be in view.
+      var need = n * (Math.ceil((xMax - xMin) / scale) + 1);
+      if (this._hitX.length < need) {
+        this._hitX = new Float32Array(need);
+        this._hitY = new Float32Array(need);
+        this._hitI = new Int32Array(need);
       }
       var hitX = this._hitX,
         hitY = this._hitY,
