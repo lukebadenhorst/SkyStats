@@ -15,9 +15,13 @@ altitude_colours <- c(
   "> 9,000 m" = "#5e60ce",
   "Unknown" = "#d0d0d0"
 )
-altitude_palette <- leaflet::colorFactor(
-  unname(altitude_colours),
-  levels = names(altitude_colours)
+# Brighter versions for the dark basemap (www/planes.js picks by theme).
+altitude_colours_dark <- c(
+  "On ground" = "#c3c8cd",
+  "< 3,000 m" = "#f6b57f",
+  "3,000-9,000 m" = "#4fd1c0",
+  "> 9,000 m" = "#8f91ff",
+  "Unknown" = "#e0e0e0"
 )
 
 mod_live_ui <- function(id) {
@@ -89,27 +93,26 @@ mod_live_server <- function(id, aircraft) {
       )
     })
 
-    # Temporary dots on the shared map's "planes" pane (Task 7 draws plane
-    # icons instead).
+    # The aircraft as plane icons on the shared map's "planes" pane, drawn
+    # and animated in the browser by www/planes.js. I() keeps length-0 and
+    # length-1 vectors as JSON arrays.
     observe({
       df <- aircraft()
-      proxy <- shared_map_proxy(session) |> clearGroup("aircraft")
-      if (nrow(df) == 0) {
-        return()
-      }
-      proxy |>
-        addCircleMarkers(
-          data = df,
-          lng = ~longitude,
-          lat = ~latitude,
-          radius = 3,
-          stroke = FALSE,
-          fillOpacity = 0.8,
-          fillColor = ~ altitude_palette(as.character(altitude_band)),
-          popup = aircraft_popup(df),
-          options = pathOptions(pane = "planes"),
-          group = "aircraft"
+      session$sendCustomMessage(
+        "planes-data",
+        list(
+          lon = I(round(df$longitude, 5)),
+          lat = I(round(df$latitude, 5)),
+          hdg = I(round(df$true_track, 1)),
+          spd = I(round(df$velocity, 1)),
+          alt = I(round(df$altitude)),
+          band = I(as.character(df$altitude_band)),
+          ground = I(df$on_ground %in% TRUE),
+          callsign = I(df$callsign),
+          popup = I(aircraft_popup(df)),
+          palette = list(light = as.list(altitude_colours), dark = as.list(altitude_colours_dark))
         )
+      )
     })
 
     output$table <- DT::renderDT({

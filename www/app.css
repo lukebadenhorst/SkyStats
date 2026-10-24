@@ -148,6 +148,54 @@ body.setup-open .setup-dim {
   opacity: 0.35;
 }
 
+/* The aircraft canvas (www/planes.js): fades in with the first data. Map
+   events reach the planes through the map, so the canvas never blocks the
+   layers below it. */
+.plane-canvas {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s var(--gf-ease);
+}
+
+.plane-canvas.shown {
+  opacity: 1;
+}
+
+/* Hidden while the map flies to a new view (too slow to redraw per frame). */
+.plane-canvas.flying {
+  opacity: 0;
+  transition-duration: 0.15s;
+}
+
+.plane-tip {
+  position: absolute;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, calc(-100% - 10px));
+  background: #1c2430;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 9px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.plane-tip.on {
+  opacity: 1;
+  visibility: visible;
+}
+
+[data-bs-theme="dark"] .plane-tip {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
 .leaflet-control-zoom {
   border: none !important;
   border-radius: 10px !important;
@@ -1635,6 +1683,7 @@ body > .selectize-dropdown .active {
   #map-wrap,
   #map-wrap::after,
   .leaflet-pane.gf-pane,
+  .plane-canvas,
   .tab-bar.ready .tab-slider,
   .tab-btn,
   .icon-panel .icon-btn,

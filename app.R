@@ -134,7 +134,8 @@ ui <- page(
   theme = theme,
   tags$head(
     tags$link(rel = "stylesheet", href = "app.css"),
-    tags$script(src = "app.js")
+    tags$script(src = "app.js"),
+    tags$script(src = "planes.js")
   ),
   div(id = "map-wrap", leafletOutput("map", height = "100%")),
   top_bar,
