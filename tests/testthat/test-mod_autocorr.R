@@ -36,3 +36,18 @@ test_that("Global G always uses binary weights and analytic inference", {
     expect_match(result()$value$weights_label, "style B")
   })
 })
+
+test_that("no aircraft gives a plain message, not an R error", {
+  testServer(
+    autocorr_server,
+    args = list(aircraft = reactive(sample_aircraft[0, ]), region_id = reactive("europe"), active = reactive(TRUE)),
+    {
+      session$setInputs(hex_km = 150, log = TRUE, weights = "queen", k = 6, d = 300, style = "W",
+                        statistic = "moran", inference = "analytic", nsim = 499, alpha = "0.05",
+                        setup_region = "europe", setup_run = 1)
+      session$elapse(700)
+      expect_false(result()$ok)
+      expect_match(result()$message, "^No aircraft match the current filters")
+    }
+  )
+})

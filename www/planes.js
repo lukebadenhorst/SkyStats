@@ -151,7 +151,9 @@
       var n = lon.length;
       this._n = n;
       this._callsign = arr(msg.callsign);
-      this._popup = arr(msg.popup);
+      // Identifies this data, so a click answer for older data is ignored.
+      this._rev = msg.rev;
+      this._clickInput = msg.click_input || "plane_click";
       this._alt = arr(msg.alt);
       this._spd = spd;
       this._ground = ground;
@@ -500,16 +502,31 @@
       if (this._map) this._map.getContainer().style.cursor = "";
     },
 
+    // The popup text is built in R for the one plane clicked (it would be
+    // megabytes for every plane): ask, and open it when "plane-popup" answers.
     _onClick: function (e) {
       var j = this._hitTest(e.containerPoint);
       if (j < 0) return;
-      var html = this._popup[this._hitI[j]];
-      if (!html) return;
       this._hideTip();
-      L.popup()
-        .setLatLng(this._map.containerPointToLatLng([this._hitX[j], this._hitY[j]]))
-        .setContent(html)
-        .openOn(this._map);
+      var i = this._hitI[j];
+      this._asked = {
+        rev: this._rev,
+        i: i,
+        latlng: this._map.containerPointToLatLng([this._hitX[j], this._hitY[j]])
+      };
+      if (window.Shiny && Shiny.setInputValue) {
+        Shiny.setInputValue(
+          this._clickInput,
+          { i: i + 1, rev: this._rev, snapshot: this._snapshot, nonce: Date.now() },
+          { priority: "event" }
+        );
+      }
+    },
+
+    showPopup: function (msg) {
+      var a = this._asked;
+      if (!a || !msg || !msg.html || msg.rev !== a.rev || msg.rev !== this._rev || msg.i - 1 !== a.i) return;
+      L.popup().setLatLng(a.latlng).setContent(msg.html).openOn(this._map);
     }
   });
 
@@ -538,6 +555,9 @@
     Shiny.addCustomMessageHandler("planes-data", function (msg) {
       if (layer) layer.setData(msg);
       else pending = msg;
+    });
+    Shiny.addCustomMessageHandler("plane-popup", function (msg) {
+      if (layer) layer.showPopup(msg);
     });
   });
 })();

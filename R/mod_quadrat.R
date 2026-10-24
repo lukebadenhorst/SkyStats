@@ -105,6 +105,9 @@ quadrat_server <- function(id, aircraft, region_id, airports, active) {
       region_id,
       params,
       compute = function(p, region) {
+        if (p$points != "airports" && nrow(p$aircraft) == 0) {
+          return(no_aircraft_result())
+        }
         run_safely({
           crs <- region_crs(region)
           df <- if (p$points == "airports") {

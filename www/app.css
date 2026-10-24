@@ -1690,7 +1690,10 @@ body:not([class*="tab-"]) .left-col {
     transform 0.6s var(--gf-ease);
 }
 
-.home-hero > * {
+/* Only the buttons and cards take clicks; the text and the gaps between
+   them let a map drag through. */
+.hero-btns .btn,
+.shortcut {
   pointer-events: auto;
 }
 

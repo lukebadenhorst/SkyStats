@@ -116,3 +116,19 @@ test_that("residual_scale gives eight bins centred on zero", {
   expect_equal(sum(s$mids), 0, tolerance = 1e-9)
   expect_length(s$pal(s$mids), 8)
 })
+
+test_that("no aircraft gives a plain message, not an R error", {
+  testServer(
+    regression_server,
+    args = list(aircraft = reactive(sample_aircraft[0, ]), region_id = reactive("europe"), airports = airports, active = reactive(TRUE)),
+    {
+      session$setInputs(
+        covariates = c("pop", "gdpPercap"), log_y = TRUE, weights = "knn", k = 4,
+        alpha = "0.05", resid = "ols_resid", setup_region = "europe", setup_run = 1
+      )
+      session$elapse(700)
+      expect_false(result()$ok)
+      expect_match(result()$message, "^No aircraft match the current filters")
+    }
+  )
+})

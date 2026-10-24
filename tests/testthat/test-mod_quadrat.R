@@ -61,3 +61,16 @@ test_that("poisson_bins gives the expected quadrats per histogram bin", {
   expect_lte(length(wide$breaks), 32)
   expect_equal(sum(wide$expected), 3 * stats::ppois(max(wide$breaks), 150), tolerance = 1e-9)
 })
+
+test_that("no aircraft gives a plain message, not an R error", {
+  testServer(
+    quadrat_server,
+    args = list(aircraft = reactive(sample_aircraft[0, ]), region_id = reactive("europe"), airports = no_airports, active = reactive(TRUE)),
+    {
+      session$setInputs(points = "aircraft", airport_types = "large_airport", nx = 6, ny = 6, alpha = "0.05", setup_region = "europe", setup_run = 1)
+      session$elapse(700)
+      expect_false(result()$ok)
+      expect_match(result()$message, "^No aircraft match the current filters")
+    }
+  )
+})

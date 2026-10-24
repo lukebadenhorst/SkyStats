@@ -3,10 +3,14 @@
 # tour that opens the class presentation. www/tour.js drives the tour in the
 # browser from the JSON in #tour-data; each step moves the shared map.
 #
-# home_server() takes one reactive from app.R:
-#   aircraft  prepped + filtered state vectors
-# On the first tour start it runs the autocorrelation once on Europe and
-# draws the LISA hexes into the "tour" pane, which step 4 shows.
+# home_server() takes two reactives from app.R:
+#   aircraft       prepped state vectors with the category/band filters but
+#                  not the region (the hero count is the world total)
+#   tour_aircraft  prepped state vectors with no filter at all, so the tour
+#                  shows the same thing whatever the sidebar is set to
+# On a tour start it runs the autocorrelation on Europe (until it has
+# succeeded once) and draws the LISA hexes into the "tour" pane, which
+# step 4 shows.
 
 # The tour text, in speaking order. Placeholder wording (from the approved
 # mockup): Luke rewrites it, so it all lives here. Each step: a headline
@@ -149,7 +153,7 @@ tour_lisa <- function(aircraft) {
   res$lisa
 }
 
-home_server <- function(id, aircraft) {
+home_server <- function(id, aircraft, tour_aircraft = aircraft) {
   moduleServer(id, function(input, output, session) {
     output$count <- renderText(format(nrow(aircraft()), big.mark = ","))
 
@@ -158,37 +162,39 @@ home_server <- function(id, aircraft) {
     # run ends would otherwise have the pane hidden again under them.
     set_pane(session, "tour", "hidden")
 
-    # Once, on the first tour start; a failed run draws nothing. If the
-    # hexes arrive while step 4 is on screen, they simply appear.
-    observeEvent(
-      input$tour_start,
-      {
-        res <- run_safely(tour_lisa(aircraft()))
-        if (!isTRUE(res$ok)) {
-          return()
-        }
-        lisa <- sf::st_transform(res$value, 4326)
-        pal <- leaflet::colorFactor(unname(lisa_colours), levels = names(lisa_colours))
-        popup <- paste0(
-          "<b>Hex ", lisa$hex_id, "</b>",
-          "<br>Aircraft: ", lisa$count,
-          "<br>Local I: ", sprintf("%.3f", lisa$Ii),
-          "<br>p-value: ", format_p(lisa$p_value),
-          "<br>Cluster: ", lisa$cluster
-        )
-        leaflet::addPolygons(
-          leaflet::clearGroup(shared_map_proxy(session), "tour"),
-          data = lisa,
-          fillColor = ~ pal(cluster),
-          fillOpacity = 0.7,
-          color = "#ffffff",
-          weight = 0.5,
-          popup = popup,
-          group = "tour",
-          options = leaflet::pathOptions(pane = "tour")
-        )
-      },
-      once = TRUE
-    )
+    # On each tour start until the hexes are drawn: a failed run draws
+    # nothing and the next start tries again. If the hexes arrive while
+    # step 4 is on screen, they simply appear.
+    tour_drawn <- reactiveVal(FALSE)
+    observeEvent(input$tour_start, {
+      if (tour_drawn()) {
+        return()
+      }
+      res <- run_safely(tour_lisa(tour_aircraft()))
+      if (!isTRUE(res$ok)) {
+        return()
+      }
+      tour_drawn(TRUE)
+      lisa <- sf::st_transform(res$value, 4326)
+      pal <- leaflet::colorFactor(unname(lisa_colours), levels = names(lisa_colours))
+      popup <- paste0(
+        "<b>Hex ", lisa$hex_id, "</b>",
+        "<br>Aircraft: ", lisa$count,
+        "<br>Local I: ", sprintf("%.3f", lisa$Ii),
+        "<br>p-value: ", format_p(lisa$p_value),
+        "<br>Cluster: ", lisa$cluster
+      )
+      leaflet::addPolygons(
+        leaflet::clearGroup(shared_map_proxy(session), "tour"),
+        data = lisa,
+        fillColor = ~ pal(cluster),
+        fillOpacity = 0.7,
+        color = "#ffffff",
+        weight = 0.5,
+        popup = popup,
+        group = "tour",
+        options = leaflet::pathOptions(pane = "tour")
+      )
+    })
   })
 }

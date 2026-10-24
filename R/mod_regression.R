@@ -128,6 +128,9 @@ regression_server <- function(id, aircraft, region_id, airports, active) {
       region_id,
       params,
       compute = function(p, region) {
+        if (nrow(p$aircraft) == 0) {
+          return(no_aircraft_result())
+        }
         run_safely({
           formula <- regression_formula(p$covariates, log_y = isTRUE(p$log_y))
           units <- country_units(region, p$aircraft, p$airports)

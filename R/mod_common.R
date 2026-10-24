@@ -65,6 +65,15 @@ use_plot_theme <- function() {
   pal
 }
 
+# What a method says when the filters leave no aircraft to analyse (a
+# run_safely() failure result).
+no_aircraft_result <- function() {
+  list(
+    ok = FALSE,
+    message = "No aircraft match the current filters. Tick at least one category or choose another airline."
+  )
+}
+
 # Yellow alert with the message of a failed run_safely() result, or NULL if
 # it succeeded.
 result_alert <- function(res) {
@@ -289,7 +298,15 @@ method_runner <- function(input, session, method, active, region_id, params, com
     set_pane(session, method, "busy")
     # Isolated: a reactive that compute() reads directly would re-run the
     # method at once, skipping the debounce.
-    res <- isolate(compute(t$params, t$region))
+    # An error outside run_safely() would leave the pane busy: hide it, then
+    # let the error through.
+    res <- tryCatch(
+      isolate(compute(t$params, t$region)),
+      error = function(e) {
+        set_pane(session, method, "hidden")
+        stop(e)
+      }
+    )
     res$region_refused <- !(t$region %in% method_regions(method))
     last_ok <<- isTRUE(res$ok)
     set_pane(session, method, if (last_ok) "shown" else "hidden")

@@ -191,21 +191,27 @@ server <- function(input, output, session) {
     )
   })
 
-  aircraft <- reactive({
-    # Unticking every category or altitude band means "show nothing", not
-    # "no filter".
+  # The sidebar filters. Unticking every category or altitude band means
+  # "show nothing", not "no filter". region_id = "world" keeps all regions.
+  filtered_aircraft <- function(region_id) {
     if (length(input$categories) == 0 || length(input$bands) == 0) {
       return(states()[0, ])
     }
     filter_states(
       states(),
-      region_id = input$region,
+      region_id = region_id,
       airlines = input$airline,
       bands = input$bands,
       categories = input$categories,
       airborne_only = input$airborne_only
     )
-  })
+  }
+
+  aircraft <- reactive(filtered_aircraft(input$region))
+
+  # For Home, which must not follow the region (a method run sets it): the
+  # hero count is the world total under the category/band filters.
+  world_aircraft <- reactive(filtered_aircraft("world"))
 
   # Tabs. Any element with data-tab="<id>" sends tab_click (www/app.js).
   # Method modules get active = reactive(active_tab() == "<id>").
@@ -247,18 +253,21 @@ server <- function(input, output, session) {
     }
   })
 
-  # Glide to the region when it changes, or when a method tab opens.
+  # Glide to the region when it changes, or when a method tab opens; Home
+  # always shows the world, whatever a method run left the map on.
   last_region <- NULL
   observeEvent(list(input$region, active_tab()), {
     req(input$region)
     region_changed <- !identical(input$region, last_region)
     last_region <<- input$region
-    if (region_changed || active_tab() %in% method_tab_ids) {
+    if (active_tab() == "home") {
+      fly_to_region(shared_map_proxy(session), "world")
+    } else if (region_changed || active_tab() %in% method_tab_ids) {
       fly_to_region(shared_map_proxy(session), input$region)
     }
   })
 
-  home_server("home", aircraft = aircraft)
+  home_server("home", aircraft = world_aircraft, tour_aircraft = states)
   mod_live_server("live", aircraft = aircraft, snapshot_id = snapshot_id)
   autocorr_server(
     "autocorr",

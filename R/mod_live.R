@@ -99,11 +99,19 @@ mod_live_server <- function(id, aircraft, snapshot_id) {
     # and animated in the browser by www/planes.js. I() keeps length-0 and
     # length-1 vectors as JSON arrays. A filter change resends the same
     # snapshot_id, so the planes keep gliding instead of snapping back.
+    # rev numbers each message. The popups are not sent with it (megabytes
+    # for thousands of planes): a click asks for one (below).
+    rev <- 0
+    sent <- NULL
     observe({
       df <- aircraft()
+      rev <<- rev + 1
+      sent <<- df
       session$sendCustomMessage(
         "planes-data",
         list(
+          rev = rev,
+          click_input = session$ns("plane_click"),
           snapshot = snapshot_id(),
           lon = I(round(df$longitude, 5)),
           lat = I(round(df$latitude, 5)),
@@ -113,9 +121,23 @@ mod_live_server <- function(id, aircraft, snapshot_id) {
           band = I(as.character(df$altitude_band)),
           ground = I(df$on_ground %in% TRUE),
           callsign = I(df$callsign),
-          popup = I(aircraft_popup(df)),
           palette = list(light = as.list(altitude_colours), dark = as.list(altitude_colours_dark))
         )
+      )
+    })
+
+    # A click on a plane (www/planes.js): answer with that plane's popup, from
+    # the data the browser is showing. A click on older data (the filters
+    # changed since) gets no answer.
+    observeEvent(input$plane_click, {
+      click <- input$plane_click
+      i <- suppressWarnings(as.integer(click$i))
+      if (is.null(sent) || !identical(as.numeric(click$rev), rev) || length(i) != 1 || is.na(i) || i < 1 || i > nrow(sent)) {
+        return()
+      }
+      session$sendCustomMessage(
+        "plane-popup",
+        list(rev = rev, i = i, html = aircraft_popup(sent[i, , drop = FALSE]))
       )
     })
 

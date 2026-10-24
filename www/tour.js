@@ -232,8 +232,9 @@
     cur = -1;
     document.body.classList.remove("touring");
     if (card.contains(document.activeElement)) {
-      var startBtn = document.querySelector(".tour-start");
-      if (startBtn) startBtn.focus({ preventScroll: true });
+      // Blur, not back to "How this app works": a clicker's next Enter or
+      // Space would start the tour again.
+      document.activeElement.blur();
     }
     if (flyHome) fly(HOME_VIEW);
   }

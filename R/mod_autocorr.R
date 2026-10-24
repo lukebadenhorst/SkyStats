@@ -156,6 +156,9 @@ autocorr_server <- function(id, aircraft, region_id, active) {
       region_id,
       params,
       compute = function(p, region) {
+        if (nrow(p$aircraft) == 0) {
+          return(no_aircraft_result())
+        }
         globalg <- p$statistic == "globalg"
         run_safely({
           pts <- to_region_sf(p$aircraft, region)

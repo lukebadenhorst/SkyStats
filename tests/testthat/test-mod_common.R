@@ -164,3 +164,34 @@ test_that("coming back to a tab that has run shows the last result without re-ru
     expect_equal(session$userData$res()$value, 2)
   })
 })
+
+test_that("an error outside run_safely() does not leave the pane busy", {
+  panes <- character()
+  original <- set_pane
+  set_pane <<- function(session, pane, state = c("shown", "hidden", "busy")) {
+    panes <<- c(panes, match.arg(state))
+  }
+  on.exit(set_pane <<- original)
+  server <- function(id) {
+    moduleServer(id, function(input, output, session) {
+      res <- method_runner(
+        input, session, "autocorr", reactive(TRUE), reactive("europe"),
+        params = reactive(list(n = input$n)),
+        compute = function(p, region) stop("boom")
+      )
+      session$userData$res <- res
+    })
+  }
+  testServer(server, {
+    session$setInputs(n = 1, setup_region = "europe", setup_run = 1)
+    session$elapse(700)
+    expect_error(session$userData$res(), "boom")
+    expect_equal(tail(panes, 2), c("busy", "hidden"))
+  })
+})
+
+test_that("no_aircraft_result() is a plain user message", {
+  res <- no_aircraft_result()
+  expect_false(res$ok)
+  expect_match(res$message, "No aircraft match the current filters")
+})
