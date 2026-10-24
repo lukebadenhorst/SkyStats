@@ -24,10 +24,16 @@ shared_map <- function() {
     leaflet::setView(lng = 10, lat = 25, zoom = 2) |>
     # The zoom buttons sit bottom right, clear of the floating panels.
     # gfMapReady (www/app.js) applies any pane states sent before the map existed.
+    # Leaflet defers drawing (the panes included) while the map has no size,
+    # for example when the page loads in a hidden viewer, so wait for the panes.
     htmlwidgets::onRender(
       "function(el, x) {
-        L.control.zoom({position: 'bottomright'}).addTo(this);
-        if (window.gfMapReady) window.gfMapReady(this);
+        var map = this;
+        L.control.zoom({position: 'bottomright'}).addTo(map);
+        (function ready() {
+          if (!map.getPane('planes')) return setTimeout(ready, 100);
+          if (window.gfMapReady) window.gfMapReady(map);
+        })();
       }"
     )
 }

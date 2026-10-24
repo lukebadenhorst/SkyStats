@@ -22,6 +22,7 @@
   --gf-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 4px 14px rgba(0, 0, 0, 0.08);
   --gf-control-bg: #f1f3f5;
   --gf-control-hover: #e7ebef;
+  --gf-control-raised: #ffffff;
   --gf-input-bg: #ffffff;
   --gf-input-border: #dde2e7;
   --gf-divider: #eceff2;
@@ -40,21 +41,28 @@
   --gf-left-w: 250px;
 }
 
+/* Dark mode (Plane Finder style): dark grey panels, light text, and light
+   primary controls (the active tab, Run, the hero and tour buttons), which
+   all take --gf-text as background and --gf-inverse as text. Chips, the
+   segmented controls and inputs sit darker than the panel. The accent is
+   lighter than in light mode so accent text stays readable. */
 [data-bs-theme="dark"] {
-  --gf-text: #e6e9ee;
-  --gf-text-2: #aab3bf;
+  --gf-text: #e6e8eb;
+  --gf-text-2: #9aa3ad;
   --gf-text-3: #8a94a3;
   --gf-body-text: #c9d0d8;
-  --gf-accent-soft: rgba(29, 111, 216, 0.22);
-  --gf-panel-bg: rgba(33, 37, 43, 0.92);
-  --gf-panel-border: rgba(255, 255, 255, 0.1);
+  --gf-accent: #6aa8f2;
+  --gf-accent-soft: rgba(29, 111, 216, 0.26);
+  --gf-panel-bg: rgba(43, 47, 54, 0.94);
+  --gf-panel-border: rgba(255, 255, 255, 0.08);
   --gf-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.35);
-  --gf-control-bg: #2c3138;
-  --gf-control-hover: #363c44;
+  --gf-control-bg: #202429;
+  --gf-control-hover: #191c20;
+  --gf-control-raised: #3a4048;
   --gf-input-bg: #23272d;
-  --gf-input-border: #3a4048;
-  --gf-divider: #343a42;
-  --gf-track: #343a42;
+  --gf-input-border: #3d434c;
+  --gf-divider: #3a3f47;
+  --gf-track: #3a3f47;
   --gf-inverse: #1c2430;
   --gf-primary-hover: #ffffff;
   --gf-haze: rgba(20, 22, 26, 0.5);
@@ -64,6 +72,8 @@
   --gf-tone-cool-bg: rgba(31, 95, 168, 0.25);
   --gf-tone-neutral: #c9d0d8;
   --gf-tone-neutral-bg: #343a42;
+  /* Inherited: dark thumbs on every scrolling panel. */
+  scrollbar-color: #4a5059 transparent;
 }
 
 html,
@@ -77,6 +87,10 @@ body {
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color: var(--gf-text);
   background: #e9ecef;
+}
+
+[data-bs-theme="dark"] body {
+  background: #1a1a1a;
 }
 
 /* ---- The shared map ---------------------------------------------------- */
@@ -192,8 +206,13 @@ body.setup-open .setup-dim {
   visibility: visible;
 }
 
-[data-bs-theme="dark"] .plane-tip {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+/* Dark mode: a light tooltip, like the light primary controls, so it stands
+   out from the dark map. */
+[data-bs-theme="dark"] .plane-tip,
+[data-bs-theme="dark"] .leaflet-tooltip.region-label {
+  background: #e6e8eb;
+  color: #1c2430;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
 .leaflet-control-zoom {
@@ -242,8 +261,54 @@ body.setup-open .setup-dim {
 [data-bs-theme="dark"] .leaflet-bar a,
 [data-bs-theme="dark"] .leaflet-popup-content-wrapper,
 [data-bs-theme="dark"] .leaflet-popup-tip {
-  background: var(--bs-body-bg);
-  color: var(--bs-body-color);
+  background: #2b2f36;
+  color: var(--gf-text);
+}
+
+[data-bs-theme="dark"] .leaflet-popup-content-wrapper {
+  border: 1px solid var(--gf-panel-border);
+  box-shadow: var(--gf-shadow);
+}
+
+[data-bs-theme="dark"] .leaflet-container a.leaflet-popup-close-button {
+  color: var(--gf-text-2);
+}
+
+[data-bs-theme="dark"] .leaflet-container a.leaflet-popup-close-button:hover {
+  color: var(--gf-text);
+}
+
+[data-bs-theme="dark"] .leaflet-container .leaflet-control-attribution {
+  background: rgba(43, 47, 54, 0.8);
+  color: var(--gf-text-3);
+}
+
+[data-bs-theme="dark"] .leaflet-container .leaflet-control-attribution a {
+  color: var(--gf-text-2);
+}
+
+/* The altitude legend (addLegend in app.R) takes the brighter plane colours
+   of altitude_colours_dark (R/mod_live.R) in dark mode, as the planes do.
+   Leaflet writes each swatch's light colour inline, so each one is matched
+   by that colour. */
+[data-bs-theme="dark"] .info.legend i[style*="#9aa0a6"] {
+  background: #c3c8cd !important;
+}
+
+[data-bs-theme="dark"] .info.legend i[style*="#f4a261"] {
+  background: #f6b57f !important;
+}
+
+[data-bs-theme="dark"] .info.legend i[style*="#2a9d8f"] {
+  background: #4fd1c0 !important;
+}
+
+[data-bs-theme="dark"] .info.legend i[style*="#5e60ce"] {
+  background: #8f91ff !important;
+}
+
+[data-bs-theme="dark"] .info.legend i[style*="#d0d0d0"] {
+  background: #e0e0e0 !important;
 }
 
 [data-bs-theme="dark"] .study-window {
@@ -999,6 +1064,11 @@ body > .selectize-dropdown .active {
   border-color: var(--gf-text);
 }
 
+/* Dark mode: the switch track turns light, so its knob turns dark. */
+[data-bs-theme="dark"] .float-panel .form-switch .form-check-input:checked {
+  --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%231c2430'/%3e%3c/svg%3e");
+}
+
 /* Slim range sliders (ionRangeSlider). */
 .float-panel .irs--shiny .irs-line {
   height: 4px;
@@ -1103,7 +1173,7 @@ body > .selectize-dropdown .active {
 }
 
 .seg .radio-inline:has(input:checked) {
-  background: var(--gf-input-bg);
+  background: var(--gf-control-raised);
   color: var(--gf-text);
   font-weight: 500;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -1552,6 +1622,10 @@ body > .selectize-dropdown .active {
 
 .region-btn:hover {
   background: rgba(255, 255, 255, 0.5);
+}
+
+[data-bs-theme="dark"] .region-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 /* ---- Home: the hero, the shortcut cards and the tour (www/tour.js) ------- */
@@ -2122,7 +2196,8 @@ body.touring .tour-card {
   #source_badge > .source-badge,
   .tour-body,
   .tour-flow-step,
-  .tour-dots i {
+  .tour-dots i,
+  .leaflet-fade-anim .leaflet-popup {
     transition-duration: 0.15s !important;
     transition-delay: 0s !important;
   }

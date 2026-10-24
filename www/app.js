@@ -8,6 +8,8 @@
 //   - region buttons in a method tab's "region refused" message
 //   - numbers that count up (.count-up outputs, and .count-up spans inside
 //     a results card's HTML output)
+//   - under prefers-reduced-motion: numbers show their final value at once,
+//     map moves jump instead of flying, and the setup box closes in 150 ms
 
 (function () {
   "use strict";
@@ -65,10 +67,22 @@
   }
   window.gfSetPane = setPane;
 
+  // Under reduced motion, R's fly_to_region() jumps instead of flying (the
+  // tour makes the same switch itself in www/tour.js).
+  function stillMapMoves(m) {
+    m.flyTo = function (center, zoom) {
+      return m.setView(center, zoom, { animate: false });
+    };
+    m.flyToBounds = function (bounds, options) {
+      return m.fitBounds(bounds, L.extend({}, options, { animate: false }));
+    };
+  }
+
   window.gfMapReady = function (m) {
     map = m;
     Object.keys(paneStates).forEach(applyPane);
     watchControlCorner(m);
+    if (reduceMotion) stillMapMoves(m);
   };
 
   // ---- Tabs ----------------------------------------------------------------
