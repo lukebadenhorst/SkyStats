@@ -50,6 +50,9 @@ run_autocorr <- function(units, weights = "queen", k = 6, d_km = 300, style = "W
   if (statistic == "globalg" && inference == "perm") {
     stop_user("Permutation inference isn't available for Global G. Use analytic.")
   }
+  if (inference == "perm" && (!is.numeric(nsim) || length(nsim) != 1 || is.na(nsim) || nsim < 99)) {
+    stop_user("Permutation inference needs at least 99 simulations (at most 999 are used).")
+  }
 
   w <- build_weights(units, weights, k = k, d_km = d_km, style = style)
   listw <- w$listw
