@@ -97,7 +97,7 @@ home_ui <- function(id) {
     div(class = "home-haze"),
     div(
       class = "home-hero",
-      h1("Global Flights"),
+      h1("SkyStats"),
       p(
         class = "hero-text",
         "Right now ",

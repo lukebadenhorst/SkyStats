@@ -22,6 +22,25 @@ method_regions <- function(method) {
   )
 }
 
+# Where the shared map should glide when the tab or the region changes: a
+# region id, or NULL to leave it where it is. Home always shows the world.
+# The method tabs always show their region. The Live Map and About follow a
+# region change; the Live Map also goes back to the region when the map was
+# left elsewhere (by Home), but otherwise keeps the user's own zoom.
+#   last_target  the region id the map was last sent to
+map_view_target <- function(tab, region, last_target, region_changed) {
+  if (tab == "home") {
+    return("world")
+  }
+  if (tab %in% app_tabs$id[app_tabs$kind == "method"] || region_changed) {
+    return(region)
+  }
+  if (tab == "live" && !identical(last_target, region)) {
+    return(region)
+  }
+  NULL
+}
+
 # Keep the current region if the method accepts it, else fall back to Europe.
 default_method_region <- function(current, method) {
   if (current %in% method_regions(method)) current else "europe"

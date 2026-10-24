@@ -1,4 +1,4 @@
-# Global Flights: Spatial Statistics Dashboard
+# SkyStats: Spatial Statistics Dashboard
 
 An R Shiny dashboard of global air traffic for STAT3037A Introduction to Spatial Statistics (Wits). It shows live aircraft positions from the [OpenSky Network](https://opensky-network.org) and runs three spatial statistics methods from the course on them.
 

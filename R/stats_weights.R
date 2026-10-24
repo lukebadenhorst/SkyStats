@@ -14,6 +14,22 @@ build_weights <- function(units, type = c("queen", "knn", "dist", "idw"), k = 6,
   style <- match.arg(style)
   glist <- NULL
 
+  # The k and d boxes can be left empty or hold any number; spdep would fail
+  # with an R error, so check them first.
+  if (type == "knn") {
+    if (!is.numeric(k) || length(k) != 1 || is.na(k) || k < 1 || k != round(k)) {
+      stop_user("Enter a whole number of neighbours (k) of at least 1.")
+    }
+    if (k >= nrow(units)) {
+      stop_user("There are only ", nrow(units), " areas, so k can be at most ", nrow(units) - 1, ".")
+    }
+  }
+  if (type %in% c("dist", "idw")) {
+    if (!is.numeric(d_km) || length(d_km) != 1 || is.na(d_km) || d_km <= 0) {
+      stop_user("Enter a distance band in km greater than 0.")
+    }
+  }
+
   if (type == "queen") {
     is_poly <- sf::st_geometry_type(units) %in% c("POLYGON", "MULTIPOLYGON")
     if (!all(is_poly)) {

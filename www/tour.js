@@ -1,4 +1,4 @@
-// Global Flights: the "How this app works" tour on the Home tab, which opens
+// SkyStats: the "How this app works" tour on the Home tab, which opens
 // the class presentation. The steps and the regions come from the JSON in
 // #tour-data (tour_steps and tour_regions() in R/mod_home.R).
 //   - .tour-start (the hero button) starts it: body.touring fades the haze

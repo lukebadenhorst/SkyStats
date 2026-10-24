@@ -16,3 +16,9 @@ test_that("the default region keeps an accepted region and falls back to Europe"
   expect_equal(default_method_region("world", "regression"), "world")
   expect_equal(default_method_region("north_america", "regression"), "europe")
 })
+
+test_that("the Live Map goes back to the region after Home", {
+  expect_equal(map_view_target("home", "europe", "europe", FALSE), "world")
+  expect_equal(map_view_target("live", "europe", "world", FALSE), "europe")
+  expect_null(map_view_target("live", "europe", "europe", FALSE))
+})

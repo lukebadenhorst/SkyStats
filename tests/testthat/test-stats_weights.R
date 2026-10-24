@@ -25,3 +25,8 @@ test_that("queen on points is refused, and islands are counted", {
   w <- suppressWarnings(build_weights(spData::world, "queen"))
   expect_gt(w$n_isolates, 0)
 })
+
+test_that("an empty k or distance band gives a user message", {
+  expect_error(build_weights(nc, "knn", k = NA), "whole number", class = "user_error")
+  expect_error(build_weights(nc, "dist", d_km = NA), "distance band", class = "user_error")
+})

@@ -33,6 +33,6 @@ rsconnect::deployApp(
   appDir = ".",
   appFiles = files,
   appName = "stat3037a-flights",
-  appTitle = "STAT3037A Global Flights",
+  appTitle = "SkyStats (STAT3037A)",
   forceUpdate = TRUE
 )
