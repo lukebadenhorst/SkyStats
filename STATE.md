@@ -20,7 +20,7 @@ The app works end to end: the Live Map and all three method tabs run in both liv
 | 10 | Spatial Regression tab | Done | #10 |
 | 11 | Home (landing) page | Done: replaced by the redesign's Home page and tour (branch `map-redesign`) | |
 | 12 | About page, sidebar text, README | Done | #11 |
-| 13 | Bug bash | **Not started** | |
+| 13 | Bug bash | Done (branch `bug-bash`), short version | |
 | S1–S5 | Stretch goals | Not started (only after Task 13) | |
 
 The step-by-step checkboxes are in `docs/plan.md`.
@@ -48,11 +48,13 @@ On branch `map-redesign` (spec `docs/superpowers/specs/2026-10-22-map-first-rede
 
 The final review of the whole branch, and Luke's own look at the app (light and dark, on a projector at 1280 × 720 and 125-150% zoom). Then reword the draft tour text and setting help lines.
 
-### Task 13: Bug bash
+### Task 13: Bug bash (24 Oct, short version)
 
-All six steps in `docs/plan.md` are open: the region × method matrix in sample mode, extreme filters, timing (Europe, 50 km hexes, 999 permutations, under 15 s), the matrix in live mode, a fresh clone on another laptop, then tag `v1.0`.
+Adapted to the map-first app. Done: every region x method with default settings on the sample, the extreme filters (no categories, one small airline, airborne + on ground), empty and out-of-range number boxes, the timing case (Europe, 50 km hexes, 999 permutations: 5.6 s), and a click-through of each tab in live mode. No red errors.
 
-Checked by hand so far (not the full matrix): each method tab in Europe; Spatial Regression in World and North America (refused with the yellow message); Point Patterns with airports in Europe.
+Fixed: an empty k, distance band or simulation count showed an R error ("missing value where TRUE/FALSE needed"), and k above the number of countries showed spdep's error; going Home -> Live Map left the map on the world view while the planes covered only the region. The app is renamed SkyStats (the shinyapps.io URL is unchanged).
+
+Not done: a fresh clone on another laptop, and the `v1.0` tag. Noted, not changed: on the Autocorrelation map the "Not significant" hexes (#eeeeee) barely show on the grey basemap.
 
 ### Stretch goals
 

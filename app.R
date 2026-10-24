@@ -15,8 +15,6 @@ poll_ms <- 10 * 60 * 1000
 airlines <- load_airlines()
 airports <- load_airports()
 
-method_tab_ids <- app_tabs$id[app_tabs$kind == "method"]
-
 theme <- bs_theme(
   version = 5,
   primary = "#1c2430",
@@ -253,17 +251,18 @@ server <- function(input, output, session) {
     }
   })
 
-  # Glide to the region when it changes, or when a method tab opens; Home
-  # always shows the world, whatever a method run left the map on.
+  # Glide the map when the tab or the region changes (map_view_target(),
+  # R/app_tabs.R): Home shows the world, the other tabs the region.
   last_region <- NULL
+  last_target <- NULL
   observeEvent(list(input$region, active_tab()), {
     req(input$region)
     region_changed <- !identical(input$region, last_region)
     last_region <<- input$region
-    if (active_tab() == "home") {
-      fly_to_region(shared_map_proxy(session), "world")
-    } else if (region_changed || active_tab() %in% method_tab_ids) {
-      fly_to_region(shared_map_proxy(session), input$region)
+    target <- map_view_target(active_tab(), input$region, last_target, region_changed)
+    if (!is.null(target)) {
+      last_target <<- target
+      fly_to_region(shared_map_proxy(session), target)
     }
   })
 

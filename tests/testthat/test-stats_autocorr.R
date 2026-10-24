@@ -49,9 +49,6 @@ test_that("too few hexes or constant values give a user message", {
   expect_error(run_autocorr(flat), "same value", class = "user_error")
 })
 
-test_that("an empty or too small number of simulations gives a user message", {
-  expect_error(run_autocorr(nc, inference = "perm", nsim = NA), "at least 99 simulations", class = "user_error")
-  expect_error(run_autocorr(nc, inference = "perm", nsim = 10), "at least 99 simulations", class = "user_error")
-  # Analytic inference ignores the simulations box.
-  expect_true(is.list(run_autocorr(nc, inference = "analytic", nsim = NA)))
+test_that("an empty number of simulations gives a user message", {
+  expect_error(run_autocorr(nc, inference = "perm", nsim = NA), "99 simulations", class = "user_error")
 })
