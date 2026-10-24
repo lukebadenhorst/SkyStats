@@ -268,7 +268,14 @@ server <- function(input, output, session) {
   })
 
   home_server("home", aircraft = world_aircraft, tour_aircraft = states)
-  mod_live_server("live", aircraft = aircraft, snapshot_id = snapshot_id)
+  # Home shows planes everywhere (its count is the world total); the Live
+  # Map and the method tabs follow the region.
+  mod_live_server(
+    "live",
+    aircraft = aircraft,
+    snapshot_id = snapshot_id,
+    planes = reactive(if (active_tab() == "home") world_aircraft() else aircraft())
+  )
   autocorr_server(
     "autocorr",
     aircraft = aircraft,
