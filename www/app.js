@@ -1,4 +1,4 @@
-// Global Flights: client-side behaviour for the map-first layout.
+// SkyStats: client-side behaviour for the map-first layout.
 //   - shared map panes shown, hidden or dimmed from R (set_pane())
 //   - tab switching from any [data-tab] element, and the tab bar highlight
 //   - folding panels (fold_panel())

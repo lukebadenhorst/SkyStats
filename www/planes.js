@@ -1,4 +1,4 @@
-// Global Flights: the aircraft on the shared map, drawn as plane icons on one
+// SkyStats: the aircraft on the shared map, drawn as plane icons on one
 // <canvas> inside the "planes" pane (so set_pane() fades it like any other
 // layer). R sends the data as the "planes-data" message (mod_live_server()).
 //   - each plane is rotated to its heading and coloured by altitude band, in

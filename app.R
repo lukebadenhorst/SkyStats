@@ -1,4 +1,4 @@
-# STAT3037A Global Flights dashboard.
+# SkyStats: the STAT3037A global flights dashboard.
 # Files in R/ are sourced automatically by Shiny before this file runs.
 #
 # Layout: one full-screen Leaflet map (R/map_shared.R) behind floating panels:
@@ -29,7 +29,7 @@ top_bar <- div(
   float_panel(
     class = "brand enter",
     bs_icon("airplane-fill", class = "brand-icon"),
-    span(class = "brand-name", "Global Flights")
+    span(class = "brand-name", "SkyStats")
   ),
   float_panel(
     class = "tab-bar enter",
@@ -129,7 +129,7 @@ content <- navset_hidden(
 )
 
 ui <- page(
-  title = "Global Flights",
+  title = "SkyStats",
   theme = theme,
   tags$head(
     tags$link(rel = "stylesheet", href = "app.css"),
