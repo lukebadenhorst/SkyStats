@@ -60,6 +60,18 @@ test_that("results_card has the short output, the button and the full results", 
   expect_match(html, "Show all results")
   expect_match(html, "results-full")
   expect_match(html, "full results here")
+  expect_no_match(html, "btn-uses")
+})
+
+test_that("results_card adds the real-world uses button and panel when given", {
+  uses <- uses_ui(c("Sector design" = "Dense cells need more controllers."), caveat = "Coverage is patchy.")
+  html <- as.character(results_card(NS("autocorr"), p("full"), uses = uses))
+  expect_match(html, 'class="btn-uses"')
+  expect_match(html, "Real-world uses")
+  expect_match(html, "results-uses")
+  expect_match(html, "Sector design")
+  expect_match(html, "Dense cells need more controllers.")
+  expect_match(html, "Coverage is patchy.")
 })
 
 test_that("summary_ui renders the number, the badge and the 2 x 2 grid", {
