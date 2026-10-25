@@ -101,6 +101,15 @@ regression_results_ui <- function(id) {
         tableOutput(ns("aic")),
         uiOutput(ns("lag_note"))
       )
+    ),
+    uses = uses_ui(
+      c(
+        "Forecasting air travel demand" = "ICAO, IATA and the World Bank model air traffic against population and income in much the same way, to forecast demand and spot countries that are under-connected for their size and wealth.",
+        "Overflight spillover (ρ)" = "A positive ρ means a country's traffic depends on its neighbours'. Aircraft over Kazakhstan, Turkey or Sudan are often just passing through, and many such countries charge overflight fees, as Russia does on the Trans-Siberian route.",
+        "Reading the residual map" = "Countries with positive residuals get more traffic than their economy and airports predict; these are usually transit corridors or hubs. Negative residuals are connectivity gaps, which the Single African Air Transport Market aims to close.",
+        "Why test the residuals first" = "If the OLS residuals are spatially clustered and you keep OLS anyway, a coefficient such as GDP's is biased because it soaks up spillover from neighbours. The Moran's I and LM tests are the standard check."
+      ),
+      caveat = "A snapshot of aircraft over a country mixes departures, arrivals and overflights, which is why the area covariate matters so much."
     )
   )
 }

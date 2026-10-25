@@ -1539,6 +1539,96 @@ body > .selectize-dropdown .active {
   grid-column: 1 / -1;
 }
 
+/* Real-world uses (results_card(uses = ) in R): a lighter button under
+   Show all results that opens a text panel below it. */
+.btn-uses {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 6px;
+  padding: 7px 10px;
+  border: 1px solid var(--gf-input-border);
+  border-radius: 8px;
+  background: var(--gf-control-raised);
+  color: var(--gf-text);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-uses:hover {
+  background: var(--gf-control-hover);
+}
+
+.btn-uses-chevron {
+  font-size: 15px;
+  line-height: 1;
+  color: var(--gf-text-2);
+  transition: transform 0.3s var(--gf-ease);
+}
+
+.results-card.uses-open .btn-uses-chevron {
+  transform: rotate(90deg);
+}
+
+.results-card > .shiny-html-output:empty ~ .btn-uses,
+.results-card > .shiny-html-output:has(> .alert:only-child) ~ .btn-uses {
+  display: none;
+}
+
+.results-uses {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.5s var(--gf-ease);
+}
+
+.results-card.uses-open .results-uses {
+  grid-template-rows: 1fr;
+}
+
+.results-uses-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.uses-body {
+  padding-top: 10px;
+  opacity: 0;
+  transition: opacity 0.4s 0.15s;
+}
+
+.results-card.uses-open .uses-body {
+  opacity: 1;
+}
+
+.uses-item + .uses-item {
+  margin-top: 10px;
+}
+
+.uses-title {
+  margin-bottom: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gf-text);
+}
+
+.uses-body p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--gf-body-text);
+}
+
+.uses-body p.uses-caveat {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--gf-divider);
+  font-size: 11.5px;
+  color: var(--gf-text-2);
+}
+
 .results-section {
   min-width: 0;
 }
@@ -2188,6 +2278,10 @@ body.touring .tour-card {
   .results-full,
   .results-full-inner > *,
   .btn-more,
+  .btn-uses,
+  .btn-uses-chevron,
+  .results-uses,
+  .uses-body,
   .setup-dim,
   .left-col > .float-panel,
   .settings-panel .btn-run,

@@ -156,13 +156,39 @@ settings_panel <- function(ns, method, title, chapter, question, intro, fields) 
 # all results button and the full results. Expanding happens in the browser
 # (the .btn-more handler in www/app.js). The busy progress line finds the
 # card by its id, "<method>-card", so the module id must be the method name.
-results_card <- function(ns, full) {
+# uses: optional real-world uses (uses_ui()), shown under its own button
+# below Show all results (the .btn-uses handler in www/app.js).
+results_card <- function(ns, full, uses = NULL) {
   float_panel(
     id = ns("card"),
     class = "results-card",
     uiOutput(ns("short")),
     actionButton(ns("more"), "Show all results", class = "btn-more"),
-    div(class = "results-full", div(class = "results-full-inner", full))
+    div(class = "results-full", div(class = "results-full-inner", full)),
+    if (!is.null(uses)) {
+      tagList(
+        tags$button(
+          type = "button",
+          class = "btn-uses",
+          `aria-expanded` = "false",
+          span(class = "btn-uses-label", "Real-world uses"),
+          span(class = "btn-uses-chevron", `aria-hidden` = "true", "›")
+        ),
+        div(class = "results-uses", div(class = "results-uses-inner", uses))
+      )
+    }
+  )
+}
+
+# The real-world uses panel. items: a named character vector, title = text;
+# caveat: one sentence on what to be careful of.
+uses_ui <- function(items, caveat = NULL) {
+  div(
+    class = "uses-body",
+    lapply(names(items), function(title) {
+      div(class = "uses-item", div(class = "uses-title", title), p(items[[title]]))
+    }),
+    if (!is.null(caveat)) p(class = "uses-caveat", tags$strong("Caveat: "), caveat)
   )
 }
 

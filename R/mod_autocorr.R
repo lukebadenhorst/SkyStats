@@ -126,6 +126,15 @@ autocorr_results_ui <- function(id) {
         p(class = "results-note", "The 10 significant hexes with the largest local I."),
         tableOutput(ns("top"))
       )
+    ),
+    uses = uses_ui(
+      c(
+        "Airspace sector design" = "Air traffic control splits airspace into sectors, each run by one controller. High-High clusters show where traffic is dense enough to need smaller sectors or more controllers. Eurocontrol and South Africa's ATNS plan sectors this way.",
+        "Corridors or hubs" = "A significant Moran's I means traffic runs in continuous corridors rather than isolated spots. Global G adds whether the clustering is of busy cells or quiet ones.",
+        "Lone hubs (High-Low)" = "A busy hex surrounded by quiet ones is usually a single hub in sparse airspace, such as Johannesburg or Nairobi, or aircraft in a holding pattern.",
+        "Gaps in coverage (Low-Low)" = "Oceans and remote land show up as Low-Low. This matters for search and rescue, and it is why satellite ADS-B tracking was brought in after MH370."
+      ),
+      caveat = "OpenSky's ground receivers are run by volunteers and are thin in Africa, so some Low-Low clusters are missing coverage rather than empty sky."
     )
   )
 }

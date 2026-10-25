@@ -79,6 +79,14 @@ quadrat_results_ui <- function(id) {
         h5("Quadrat counts against the Poisson expectation"),
         plotOutput(ns("hist"), height = "260px")
       )
+    ),
+    uses = uses_ui(
+      c(
+        "Where to put airports" = "A VTMR below 1 means airports are spread out, each serving its own area, which is what planners aim for with regional airports. Above 1 means they bunch around cities and coasts, leaving rural people far from one.",
+        "Diversion airports" = "Twin-engine aircraft on long routes must stay within a set flying time of an airport they can land at (ETOPS rules). Large empty quadrats are the areas that limit routes over Africa, the oceans and Siberia.",
+        "Measuring congestion" = "Aircraft are almost never randomly spread, because they fly between cities. What matters is how big the VTMR is: the higher it is, the more traffic is packed into a few places, and the higher the congestion risk there."
+      ),
+      caveat = "The result depends on the grid size (the modifiable areal unit problem). Try a few grid sizes and see how VTMR changes."
     )
   )
 }

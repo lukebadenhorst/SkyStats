@@ -344,6 +344,16 @@
         toggleMore(more);
         return;
       }
+      // Real-world uses: opens below the button without widening the card.
+      var uses = e.target.closest(".btn-uses");
+      if (uses) {
+        var usesCard = uses.closest(".results-card");
+        if (usesCard) {
+          var open = usesCard.classList.toggle("uses-open");
+          uses.setAttribute("aria-expanded", open ? "true" : "false");
+        }
+        return;
+      }
       var guide = e.target.closest(".guide-link");
       if (guide) {
         e.preventDefault();
