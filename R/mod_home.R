@@ -29,7 +29,7 @@ tour_steps <- list(
     title = "A fresh snapshot every 10 minutes, shared by everyone.",
     points = c(
       "That keeps us well inside OpenSky's free daily limit.",
-      "No connection? The app falls back to a saved snapshot, and the badge always says which one you see."
+      "Without a connection the app uses a saved snapshot, and the badge says which one you are seeing."
     ),
     action = "badge"
   ),
@@ -44,9 +44,9 @@ tour_steps <- list(
   list(
     title = "Three methods from the course notes.",
     points = c(
-      "<b>Autocorrelation (Ch 4):</b> do busy hexes sit next to busy hexes?",
-      "<b>Point Patterns (Ch 7):</b> are aircraft spread at random?",
-      "<b>Regression (Ch 6):</b> what explains traffic per country?"
+      "<b>Autocorrelation:</b> do busy hexes sit next to busy hexes?",
+      "<b>Point Patterns:</b> are aircraft spread at random?",
+      "<b>Regression:</b> what explains traffic per country?"
     ),
     action = "lisa"
   ),
@@ -62,18 +62,18 @@ tour_steps <- list(
     title = "Empty sky can mean no receivers, not no aircraft.",
     points = c(
       "Coverage is dense over Europe and North America, thin over Africa and the oceans.",
-      "A snapshot is one moment, not a full day of traffic."
+      "Each snapshot is one moment, and traffic changes through the day."
     ),
     action = "coverage"
   )
 )
 
-# The shortcut cards: the tab each opens, its chapter tag and a blurb.
+# The shortcut cards: the tab each opens and a blurb.
 home_cards <- list(
-  list(tab = "live", tag = "Live", title = "Live Map", text = "Every aircraft OpenSky is tracking right now."),
-  list(tab = "autocorr", tag = "Ch 4", title = "Autocorrelation", text = "Is air traffic clustered? Moran's I and LISA."),
-  list(tab = "quadrat", tag = "Ch 7", title = "Point Patterns", text = "Random, clustered or regular? Quadrats and VTMR."),
-  list(tab = "regression", tag = "Ch 6", title = "Regression", text = "What explains traffic per country? OLS to spatial lag.")
+  list(tab = "live", title = "Live Map", text = "Every aircraft OpenSky is tracking right now."),
+  list(tab = "autocorr", title = "Autocorrelation", text = "Is air traffic clustered? Moran's I and LISA."),
+  list(tab = "quadrat", title = "Point Patterns", text = "Random, clustered or regular? Quadrats and VTMR."),
+  list(tab = "regression", title = "Regression", text = "What explains traffic per country? OLS to spatial lag.")
 )
 
 # The regions step 5 visits (the ones with an equal-area CRS), with their
@@ -102,7 +102,7 @@ home_ui <- function(id) {
         class = "hero-text",
         "Right now ",
         tagAppendAttributes(textOutput(ns("count"), inline = TRUE), class = "count-up hero-count"),
-        " aircraft are in the sky. This app maps them live from the OpenSky Network and tests their pattern with three spatial statistics methods from STAT3037A."
+        " aircraft are in the sky."
       ),
       div(
         class = "hero-btns",
@@ -117,7 +117,6 @@ home_ui <- function(id) {
             type = "button",
             class = "float-panel shortcut no-enter",
             `data-tab` = card$tab,
-            span(class = "shortcut-tag", card$tag),
             span(class = "shortcut-title", card$title),
             span(class = "shortcut-text", card$text)
           )

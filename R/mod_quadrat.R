@@ -1,4 +1,4 @@
-# Point Patterns tab (Ch 7): the quadrat test for complete spatial
+# Point Patterns tab: the quadrat test for complete spatial
 # randomness, on airborne aircraft or airports, drawn on the shared map.
 # The statistics are in R/stats_quadrat.R.
 #
@@ -21,7 +21,6 @@ quadrat_settings_ui <- function(id) {
     ns,
     "quadrat",
     "Point Patterns",
-    "Ch 7",
     question = "Are the points spread at random?",
     intro = "We lay a grid of equal squares (quadrats) over the region, count the points in each, and compare the counts with what pure chance would give.",
     fields = tagList(
@@ -84,7 +83,7 @@ quadrat_results_ui <- function(id) {
       c(
         "Where to put airports" = "A VTMR below 1 means airports are spread out, each serving its own area, which is what planners aim for with regional airports. Above 1 means they bunch around cities and coasts, leaving rural people far from one.",
         "Diversion airports" = "Twin-engine aircraft on long routes must stay within a set flying time of an airport they can land at (ETOPS rules). Large empty quadrats are the areas that limit routes over Africa, the oceans and Siberia.",
-        "Measuring congestion" = "Aircraft are almost never randomly spread, because they fly between cities. What matters is how big the VTMR is: the higher it is, the more traffic is packed into a few places, and the higher the congestion risk there."
+        "Measuring congestion" = "Aircraft are almost never randomly spread, because they fly between cities, so the useful number is the size of the VTMR. The higher it is, the more traffic is packed into a few places, and the higher the congestion risk there."
       ),
       caveat = "The result depends on the grid size (the modifiable areal unit problem). Try a few grid sizes and see how VTMR changes."
     )

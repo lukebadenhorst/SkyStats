@@ -1,4 +1,4 @@
-# Spatial Regression tab (Ch 6): aircraft over each country explained by
+# Spatial Regression tab: aircraft over each country explained by
 # country covariates, following the course workflow (OLS, residual Moran's
 # I, LM tests, spatial lag model), drawn on the shared map. The statistics
 # are in R/stats_regression.R.
@@ -19,7 +19,6 @@ regression_settings_ui <- function(id) {
     ns,
     "regression",
     "Spatial Regression",
-    "Ch 6",
     question = "What explains how many aircraft are over each country?",
     intro = "We model each country's aircraft count from its population, wealth, size and airports, then check whether neighbouring countries affect each other.",
     fields = tagList(

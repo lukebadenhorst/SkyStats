@@ -1,4 +1,4 @@
-# Autocorrelation tab (Ch 4): counts aircraft in a hex grid over the region,
+# Autocorrelation tab: counts aircraft in a hex grid over the region,
 # runs a global test (Moran's I, Geary's C or Global G) and maps the LISA
 # clusters on the shared map. The statistics are in R/stats_autocorr.R.
 #
@@ -25,7 +25,6 @@ autocorr_settings_ui <- function(id) {
     ns,
     "autocorr",
     "Autocorrelation",
-    "Ch 4",
     question = "Do busy areas sit next to other busy areas?",
     intro = "We cover the region in hexagons, count the aircraft in each, and test whether neighbouring hexes have similar counts.",
     fields = tagList(
@@ -130,9 +129,9 @@ autocorr_results_ui <- function(id) {
     uses = uses_ui(
       c(
         "Airspace sector design" = "Air traffic control splits airspace into sectors, each run by one controller. High-High clusters show where traffic is dense enough to need smaller sectors or more controllers. Eurocontrol and South Africa's ATNS plan sectors this way.",
-        "Corridors or hubs" = "A significant Moran's I means traffic runs in continuous corridors rather than isolated spots. Global G adds whether the clustering is of busy cells or quiet ones.",
+        "Corridors or hubs" = "A significant Moran's I means busy hexes touch other busy hexes, so traffic runs in continuous corridors. Global G adds whether the clustering is of busy hexes or quiet ones.",
         "Lone hubs (High-Low)" = "A busy hex surrounded by quiet ones is usually a single hub in sparse airspace, such as Johannesburg or Nairobi, or aircraft in a holding pattern.",
-        "Gaps in coverage (Low-Low)" = "Oceans and remote land show up as Low-Low. This matters for search and rescue, and it is why satellite ADS-B tracking was brought in after MH370."
+        "Gaps in coverage (Low-Low)" = "Oceans and remote land show up as Low-Low. These gaps make search and rescue harder, and they are why satellite ADS-B tracking was brought in after MH370."
       ),
       caveat = "OpenSky's ground receivers are run by volunteers and are thin in Africa, so some Low-Low clusters are missing coverage rather than empty sky."
     )
