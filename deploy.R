@@ -32,7 +32,7 @@ files <- c(
 rsconnect::deployApp(
   appDir = ".",
   appFiles = files,
-  appName = "stat3037a-flights",
+  appName = "stat3037a-skystats",
   appTitle = "SkyStats (STAT3037A)",
   forceUpdate = TRUE
 )
