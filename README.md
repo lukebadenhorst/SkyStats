@@ -40,6 +40,8 @@ The filters in the left column (region, airline, category, altitude band, airbor
 - **Point Patterns (Ch 7):** tests airborne aircraft or airports for complete spatial randomness with the chi-squared quadrat test and the variance-to-mean ratio. Choose the number of quadrats across and down. Needs a region other than World.
 - **Spatial Regression (Ch 6):** models aircraft over each country from population, GDP per capita, area and airport count, through OLS, residual Moran's I, the LM tests and a spatial lag model. Choose the covariates and the weights. Europe and World only, since the other regions have fewer than 15 countries.
 
+[`docs/methodology.md`](docs/methodology.md) explains how the app gets and prepares the data and how each method is computed, with the formulas, decision rules and limitations.
+
 ## Live data (optional)
 
 1. Create a free account at <https://opensky-network.org>, then create an API client on your account page to get a client ID and secret.
