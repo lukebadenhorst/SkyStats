@@ -239,9 +239,16 @@
     if (flyHome) fly(HOME_VIEW);
   }
 
+  // The last step's button, "Start exploring", opens the Live Map, the way
+  // the hero's "Open the live map" button does (app.js's [data-tab] handler).
+  // The tab change moves the map, so the tour does not fly it home.
   function next() {
-    if (cur < data.steps.length - 1) render(cur + 1);
-    else finish(true);
+    if (cur < data.steps.length - 1) {
+      render(cur + 1);
+      return;
+    }
+    finish(false);
+    if (window.Shiny && Shiny.setInputValue) Shiny.setInputValue("tab_click", "live", { priority: "event" });
   }
 
   function back() {

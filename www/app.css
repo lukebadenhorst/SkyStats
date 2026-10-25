@@ -1930,15 +1930,6 @@ body.touring .home-hero * {
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
 }
 
-.shortcut-tag {
-  display: block;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--gf-accent);
-}
-
 .shortcut-title {
   display: block;
   margin: 1px 0 3px;

@@ -8,7 +8,7 @@ float_panel <- function(..., class = NULL, id = NULL) {
 
 # A floating panel whose body folds away when its header is clicked. The
 # folding happens in the browser (www/app.js). tag: optional small label in
-# the header, such as a chapter ("Ch 4").
+# the header.
 fold_panel <- function(title, ..., open = TRUE, tag = NULL) {
   float_panel(
     class = c("fold-panel", if (!open) "closed"),
@@ -106,11 +106,10 @@ method_region_choices <- function(method) {
 
 # The method's settings panel, which doubles as the setup box. ns: the
 # module's NS(); method: "autocorr", "quadrat" or "regression"; title: the
-# method's short name ("Autocorrelation"); chapter: "Ch 4"; question and
-# intro: the box's heading and sentence; fields: a tagList of setting() rows.
-# .setup-only parts show only in the box, .panel-only parts only in the
-# left column.
-settings_panel <- function(ns, method, title, chapter, question, intro, fields) {
+# method's short name ("Autocorrelation"); question and intro: the box's
+# heading and sentence; fields: a tagList of setting() rows. .setup-only
+# parts show only in the box, .panel-only parts only in the left column.
+settings_panel <- function(ns, method, title, question, intro, fields) {
   region_help <- if (method == "regression") {
     "Regression compares countries, so it needs at least 15 of them. Only Europe and the whole World have enough."
   } else {
@@ -121,12 +120,11 @@ settings_panel <- function(ns, method, title, chapter, question, intro, fields) 
     class = "settings-panel",
     div(
       class = "panel-head panel-only",
-      span(class = "panel-title", paste(title, "settings")),
-      span(class = "fold-tag", chapter)
+      span(class = "panel-title", paste(title, "settings"))
     ),
     div(
       class = "setup-head setup-only",
-      span(class = "fold-tag", paste(chapter, title, sep = " · ")),
+      span(class = "fold-tag", title),
       h3(question),
       p(intro)
     ),

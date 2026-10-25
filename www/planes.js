@@ -6,6 +6,7 @@
 //   - airborne planes glide along their heading from the moment the data
 //     reached the browser, for at most 15 minutes (none under reduced motion)
 //   - hover shows a small dark tooltip, click opens the aircraft's popup
+//     (not on Home)
 // Loaded after app.js: it chains onto window.gfMapReady.
 //
 // Speed: the whole world is about 13,000 planes, and a full redraw then takes
@@ -453,8 +454,9 @@
     // ---- Hover and click -----------------------------------------------------
 
     // Index into the drawn list of the plane nearest a container point, or -1.
+    // None on Home: the planes there are a backdrop, so no tooltip or popup.
     _hitTest: function (p) {
-      if (this._paneHidden() || this._moving) return -1;
+      if (this._paneHidden() || this._moving || document.body.classList.contains("tab-home")) return -1;
       var best = -1,
         bestD = HIT_PX * HIT_PX;
       for (var j = 0; j < this._hitN; j++) {

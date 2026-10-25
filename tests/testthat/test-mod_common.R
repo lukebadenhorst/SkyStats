@@ -31,7 +31,7 @@ test_that("plot_palette falls back to light mode with no colour", {
 
 test_that("settings_panel offers only the regions the method accepts", {
   html <- as.character(settings_panel(
-    NS("autocorr"), "autocorr", "Autocorrelation", "Ch 4",
+    NS("autocorr"), "autocorr", "Autocorrelation",
     question = "Do busy areas sit next to other busy areas?",
     intro = "We cover the region in hexagons.",
     fields = setting(sliderInput("autocorr-hex_km", "Hex size", 50, 500, 150), "How big each hexagon is.")
@@ -47,7 +47,7 @@ test_that("settings_panel offers only the regions the method accepts", {
   expect_no_match(html, 'value="world"')
   expect_match(html, 'value="europe"')
 
-  reg <- as.character(settings_panel(NS("regression"), "regression", "Regression", "Ch 6", "Q", "I", NULL))
+  reg <- as.character(settings_panel(NS("regression"), "regression", "Regression", "Q", "I", NULL))
   expect_match(reg, 'value="world"')
   expect_no_match(reg, 'value="north_america"')
   expect_match(reg, "at least 15 of them")
