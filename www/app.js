@@ -318,6 +318,23 @@
     return formatNumber(start, digits, to.suffix);
   }
 
+  // ---- About sections --------------------------------------------------------
+
+  // Shows the section for one tab of the About panel and hides the others.
+  function selectAboutTab(tab) {
+    var panel = tab.closest(".about-panel");
+    if (!panel) return;
+    var section = tab.getAttribute("data-about");
+    panel.querySelectorAll(".about-tab").forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+    });
+    panel.querySelectorAll(".about-view").forEach(function (v) {
+      v.hidden = v.getAttribute("data-about") !== section;
+    });
+  }
+
   // ---- Wiring ----------------------------------------------------------------
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -372,6 +389,11 @@
         }
         return;
       }
+      var aboutTab = e.target.closest(".about-tab");
+      if (aboutTab) {
+        selectAboutTab(aboutTab);
+        return;
+      }
       var pick = e.target.closest(".region-btn");
       if (pick && window.Shiny && Shiny.setInputValue) {
         Shiny.setInputValue("region_pick", pick.getAttribute("data-region"), { priority: "event" });
@@ -387,6 +409,17 @@
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") {
         dismissSetup();
+        return;
+      }
+      // About: the left and right arrows move between the section tabs.
+      var onTab = e.target.closest && e.target.closest(".about-tab");
+      if (onTab && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+        e.preventDefault();
+        var all = Array.prototype.slice.call(onTab.parentNode.querySelectorAll(".about-tab"));
+        var step = e.key === "ArrowRight" ? 1 : -1;
+        var next = all[(all.indexOf(onTab) + step + all.length) % all.length];
+        selectAboutTab(next);
+        next.focus();
         return;
       }
       if (e.key !== "Enter" && e.key !== " ") return;

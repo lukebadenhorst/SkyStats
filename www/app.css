@@ -36,6 +36,8 @@
   --gf-tone-cool-bg: #e6eef8;
   --gf-tone-neutral: #5b6573;
   --gf-tone-neutral-bg: #eef0f3;
+  --gf-warn: #9a5b00;
+  --gf-warn-bg: #fff4e0;
   --gf-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --gf-top: 66px;
   --gf-left-w: 250px;
@@ -72,6 +74,8 @@
   --gf-tone-cool-bg: rgba(31, 95, 168, 0.25);
   --gf-tone-neutral: #c9d0d8;
   --gf-tone-neutral-bg: #343a42;
+  --gf-warn: #f0b660;
+  --gf-warn-bg: rgba(240, 182, 96, 0.14);
   /* Inherited: dark thumbs on every scrolling panel. */
   scrollbar-color: #4a5059 transparent;
 }
@@ -2146,31 +2150,586 @@ body.touring .tour-card {
   }
 }
 
-/* ---- Centred panels (About) ---------------------------------------------- */
+/* ---- About --------------------------------------------------------------- */
 
-/* Centred with auto margins rather than a transform, so the entrance
-   animation can use transform freely. */
-.center-panel {
+/* One panel over the blurred map, filling the screen below the top bar. A
+   segmented control in the header switches between the sections (www/app.js);
+   each section scrolls on its own. */
+.about-panel {
   position: fixed;
   top: var(--gf-top);
   bottom: 12px;
-  left: 0;
-  right: 0;
+  left: 12px;
+  right: 12px;
   z-index: 990;
-  width: min(960px, calc(100vw - 24px));
-  height: fit-content;
-  max-height: calc(100vh - var(--gf-top) - 12px);
-  margin: auto;
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  color: var(--gf-body-text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.about-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--gf-divider);
+}
+
+.about-title h1 {
+  margin: 0;
+  color: var(--gf-text);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.about-title p {
+  margin: 0;
+  color: var(--gf-text-3);
+  font-size: 12px;
+}
+
+.about-seg {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--gf-control-bg);
+}
+
+.about-tab {
+  padding: 6px 16px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--gf-text-2);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    box-shadow 0.2s;
+}
+
+.about-tab:hover {
+  color: var(--gf-text);
+}
+
+.about-tab[aria-selected="true"] {
+  background: var(--gf-control-raised);
+  color: var(--gf-text);
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.about-tab:focus-visible {
+  outline: 2px solid var(--gf-accent);
+  outline-offset: 1px;
+}
+
+.about-views {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.about-view {
+  position: absolute;
+  inset: 0;
+  padding: 28px 32px 32px;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
+  animation: gf-enter-up 0.35s var(--gf-ease) both;
 }
 
-.about-panel .card {
-  background: transparent;
-  border-color: var(--gf-divider);
-  box-shadow: none;
+.about-panel h2,
+.about-panel h3 {
+  color: var(--gf-text);
+  text-wrap: balance;
+}
+
+.about-panel code {
+  padding: 1px 3px;
+  border-radius: 4px;
+  background: var(--gf-control-bg);
+  color: var(--gf-text);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.about-intro {
+  max-width: 68ch;
+  margin-bottom: 26px;
+}
+
+.about-intro h2 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.about-intro p {
+  margin: 0;
+}
+
+.about-label {
+  color: var(--gf-text-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Data sources: the API, cache and app as a flow, then the lookup tables. */
+.about-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  margin-bottom: 30px;
+}
+
+.about-node {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--gf-divider);
+  border-radius: 10px;
+}
+
+.about-node.main {
+  border-color: var(--gf-accent);
+  background: var(--gf-accent-soft);
+}
+
+.about-node strong {
+  color: var(--gf-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.about-node > span:not(.about-label) {
+  color: var(--gf-text-2);
+  font-size: 12.5px;
+}
+
+.about-fallback {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--gf-divider);
+  color: var(--gf-text-2);
+  font-size: 12px;
+}
+
+.about-arrow {
+  display: grid;
+  place-items: center;
+  padding: 0 10px;
+  color: var(--gf-text-3);
+}
+
+.about-table-label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.about-table-wrap {
+  overflow-x: auto;
+}
+
+.about-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.about-table th {
+  padding: 0 16px 8px 0;
+  text-align: left;
+}
+
+.about-table td {
+  padding: 14px 16px 14px 0;
+  border-top: 1px solid var(--gf-divider);
+  vertical-align: top;
+}
+
+.about-table td:first-child {
+  color: var(--gf-text);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.about-table td:last-child {
+  padding-right: 0;
+}
+
+.about-uses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.about-uses span {
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--gf-control-bg);
+  color: var(--gf-text-2);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.about-cite {
+  margin: 22px 0 0;
+  color: var(--gf-text-3);
+  font-size: 12px;
+}
+
+/* Methods and Limitations: three columns split by thin rules. */
+.about-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.about-col {
+  min-width: 0;
+  padding: 0 26px;
+  border-left: 1px solid var(--gf-divider);
+}
+
+.about-col:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.about-col:last-child {
+  padding-right: 0;
+}
+
+.about-col h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.about-method {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.about-method-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.about-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--gf-accent-soft);
+  color: var(--gf-accent);
+  font-size: 17px;
+}
+
+.about-question {
+  margin: 0;
+  color: var(--gf-text);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.about-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.about-steps li {
+  position: relative;
+  padding: 0 0 12px 28px;
+  font-size: 13px;
+  counter-increment: step;
+}
+
+.about-steps li code {
+  white-space: normal;
+}
+
+.about-steps li::before {
+  content: counter(step);
+  position: absolute;
+  top: 1px;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--gf-control-bg);
+  color: var(--gf-text-2);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.about-steps li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 21px;
+  bottom: 2px;
+  left: 8.5px;
+  width: 1px;
+  background: var(--gf-divider);
+}
+
+.about-read {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gf-divider);
+}
+
+.about-scale {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.about-scale div {
+  padding: 6px 4px;
+  border-radius: 6px;
+  background: var(--gf-control-bg);
+  color: var(--gf-text-2);
+  font-size: 11.5px;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.about-scale b {
+  display: block;
+  color: var(--gf-text);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.about-foot {
+  margin-top: 28px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--gf-control-bg);
+  font-size: 13px;
+}
+
+.about-sub {
+  margin: 4px 0 16px;
+  color: var(--gf-text-3);
+  font-size: 12.5px;
+}
+
+.about-limit {
+  padding: 12px 0;
+  border-top: 1px solid var(--gf-divider);
+  font-size: 13px;
+}
+
+.about-limit strong {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--gf-text);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.about-effect {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--gf-warn-bg);
+  color: var(--gf-warn);
+  font-size: 11.5px;
+}
+
+/* Team and credits. */
+.about-credits {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 40px;
+}
+
+.about-course {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--gf-divider);
+  color: var(--gf-text-2);
+}
+
+.about-course-code {
+  color: var(--gf-accent);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.about-course strong {
+  color: var(--gf-text);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.about-team {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.about-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--gf-divider);
+  border-radius: 10px;
+}
+
+.about-person > div:last-child {
+  min-width: 0;
+}
+
+.about-person strong {
+  display: block;
+  color: var(--gf-text);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.about-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--gf-control-bg);
+  color: var(--gf-text-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.about-student-no {
+  color: var(--gf-text-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.about-pkgs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 20px;
+  margin-top: 10px;
+}
+
+.about-pkg {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--gf-divider);
+  font-size: 13px;
+}
+
+.about-pkg > div {
+  display: flex;
+  gap: 4px;
+}
+
+.about-pkg > span {
+  color: var(--gf-text-3);
+  text-align: right;
+}
+
+.about-thanks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 30px;
+}
+
+.about-thanks p {
+  margin: 0;
+  font-size: 13px;
+}
+
+@media (max-width: 1000px) {
+  .about-cols,
+  .about-credits {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .about-col {
+    padding: 0;
+    border-left: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .about-head {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .about-head-end {
+    display: none;
+  }
+
+  .about-seg {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .about-tab {
+    flex: none;
+    padding: 6px 12px;
+  }
+
+  .about-view {
+    padding: 20px 16px 24px;
+  }
+
+  .about-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .about-arrow {
+    padding: 6px 0;
+    transform: rotate(90deg);
+  }
+
+  .about-team,
+  .about-pkgs {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---- Entrances ------------------------------------------------------------ */
@@ -2332,6 +2891,14 @@ body.touring .tour-card {
     animation-name: gf-fade !important;
     animation-duration: 0.15s !important;
     animation-delay: 0s !important;
+  }
+
+  .about-view {
+    animation: gf-fade 0.15s both !important;
+  }
+
+  .about-tab {
+    transition-duration: 0.15s !important;
   }
 
   /* The setup box only fades. */
