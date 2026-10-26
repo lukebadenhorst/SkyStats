@@ -2,11 +2,15 @@
 
 An R Shiny dashboard of global air traffic for STAT3037A Introduction to Spatial Statistics (Wits). It shows live aircraft positions from the [OpenSky Network](https://opensky-network.org) and runs three spatial statistics methods from the course on them.
 
-**Hosted app:** <https://wjpfz8-luke-badenhorst.shinyapps.io/stat3037a-flights/>
+**Hosted app:** <https://stat3037a.shinyapps.io/stat3037a-skystats/>
 
-The hosted app always shows the bundled sample snapshot, and its badge says "Sample snapshot". This is expected. OpenSky does not accept connections from shinyapps.io's servers, most likely because it blocks cloud data centres. We tested this from the server: OpenSky never answered, while other sites did. The snapshot is a real global capture from OpenSky, refreshed shortly before submission, and every tab and method works on it. For live data, run the app on your own computer with OpenSky credentials (see "Live data" below). See `docs/shiny_deployment.md` for how the app is deployed.
+> **Why the hosted app has no live data**
+>
+> The hosted app shows a saved snapshot of global air traffic instead of live positions, and its badge says "Sample snapshot". This is expected, not a bug. OpenSky, the source of the live data, does not accept connections from shinyapps.io's servers, most likely because it blocks cloud data centres. We tested this from the server: OpenSky never answered, while other sites replied in a fraction of a second. No change to our code or credentials can get around it.
+>
+> So on shinyapps.io the app skips OpenSky and loads the snapshot straight away. The snapshot is a real global capture from OpenSky, taken shortly before submission, and every tab and method works on it. To see live data, run the app on your own computer with OpenSky credentials (see "Live data" below). `docs/shiny_deployment.md` explains how the app is deployed.
 
-**Status:** the Home page with its presentation tour, the Live Map and the three method tabs (Autocorrelation, Point Patterns, Spatial Regression) work in both live and sample mode. The layout is map-first: one full-screen map that every tab draws on, with floating panels on top. See `docs/design.md` for the original design, `docs/plan.md` for the implementation plan, and `docs/superpowers/specs/2026-10-22-map-first-redesign-design.md` for the map-first layout.
+**Status:** the Home page with its presentation tour, the Live Map and the three method tabs (Autocorrelation, Point Patterns, Spatial Regression) work in both live and sample mode. The layout is map-first: one full-screen map that every tab draws on, with floating panels on top. [`docs/methodology.md`](docs/methodology.md) explains how each method is computed, and [`docs/real_world_applications.md`](docs/real_world_applications.md) what the results mean for aviation.
 
 ## Run it
 

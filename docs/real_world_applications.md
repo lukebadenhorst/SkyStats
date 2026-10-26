@@ -1,8 +1,8 @@
 # Real-world applications
 
-What each analysis in the app means in practice, and who works on the same question with real data. Use this for the interpretation text on each tab, the Home page (Task 11) and the write-up.
+What each analysis in the app means in practice, and who works on the same question with real data. The app's "Real-world uses" panels draw on it.
 
-The methods are specified in `docs/design.md` §3.4–3.6. The scope for 26 Oct is in `docs/plan.md`.
+How each method is computed is in `docs/methodology.md`.
 
 ## Framing
 
@@ -50,4 +50,4 @@ The three tabs answer three questions about air traffic:
   - *Negative residuals:* less traffic than predicted. These are connectivity gaps, which matter in Africa, where the Single African Air Transport Market (SAATM) aims to open up intra-African routes.
 - **The OLS → residual Moran's I → LM tests sequence** is the standard check analysts run. If they skip it and use OLS when the residuals are spatially clustered, the coefficient on, say, GDP is biased, because it absorbs spillover from neighbours.
 
-**Caveat:** a single snapshot of aircraft over each country mixes departing, arriving and passing traffic, which is why the area covariate matters so much. Stretch goal S1 (departures from `/flights/all`) would separate demand generated in a country from overflights.
+**Caveat:** a single snapshot of aircraft over each country mixes departing, arriving and passing traffic, which is why the area covariate matters so much. Counting departures instead (OpenSky's `/flights/all` endpoint) would separate demand generated in a country from overflights.
