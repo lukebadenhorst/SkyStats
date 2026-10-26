@@ -1,12 +1,12 @@
 # Deploying the app to shinyapps.io
 
-We have to hand in both the GitHub repo and a published app. This doc explains how we publish it and how the OpenSky API works once the app is hosted. The app was deployed on 24 Oct with `deploy.R`; OpenSky turned out to block the server, so the hosted app shows the sample (section 1). It replaces stretch goal S5 in `docs/plan.md`, which is now required.
+We have to hand in both the GitHub repo and a published app. This doc explains how we publish it and how the OpenSky API works once the app is hosted. The app was deployed on 24 Oct with `deploy.R`; OpenSky turned out to block the server, so the hosted app shows the sample (section 1).
 
 **Deploy by 24 Oct**, so there is time to fix problems before the 26 Oct deadline. The first deploy can take 10–20 minutes while the server installs the packages.
 
 ## 1. How the API works when the app is hosted
 
-> **Confirmed on 24 Oct: OpenSky blocks shinyapps.io.** The hosted app is at <https://wjpfz8-luke-badenhorst.shinyapps.io/stat3037a-flights/>, and it always shows the bundled sample (badge: "Sample"). A test app on the same server could not open a connection to either `auth.opensky-network.org` or `opensky-network.org` (no reply within 15 seconds), while Google and GitHub answered in 0.1 seconds. So the server's internet works, and OpenSky silently drops connections from it, most likely because it blocks cloud data centres. No change to our code or credentials can fix this, and calling the API without signing in is blocked too. What we do instead:
+> **Confirmed on 24 Oct: OpenSky blocks shinyapps.io.** The hosted app is at <https://stat3037a.shinyapps.io/stat3037a-skystats/>, and it always shows the bundled sample (badge: "Sample"). A test app on the same server could not open a connection to either `auth.opensky-network.org` or `opensky-network.org` (no reply within 15 seconds), while Google and GitHub answered in 0.1 seconds. So the server's internet works, and OpenSky silently drops connections from it, most likely because it blocks cloud data centres. No change to our code or credentials can fix this, and calling the API without signing in is blocked too. What we do instead:
 >
 > - **No wait on the hosted app (26 Oct):** the app spots shinyapps.io (it sets `R_CONFIG_ACTIVE=shinyapps`) and goes straight to the sample instead of waiting for OpenSky to time out. Set `SKYSTATS_OFFLINE=true` to get the same behaviour locally. `deploy.R` no longer uploads `.Renviron`, so the credentials are not on the server (section 4).
 > - **Hosted app:** recapture the sample shortly before submitting and redeploy (section 8), so the snapshot is recent.
@@ -35,7 +35,7 @@ We use shinyapps.io because it works with the private repo as it is. One group m
 
 ## 3. One-time setup
 
-1. Create a free account at <https://www.shinyapps.io>. The account name becomes part of the URL, for example `https://<account>.shinyapps.io/stat3037a-flights/`.
+1. Create a free account at <https://www.shinyapps.io>. The account name becomes part of the URL, for example `https://<account>.shinyapps.io/stat3037a-skystats/`.
 2. Install rsconnect in R: `install.packages("rsconnect")`.
 3. On shinyapps.io, open **Account → Tokens → Show**, and copy the `rsconnect::setAccountInfo(...)` command. **Paste it into the R console only.** The token and secret give full control of the account, so never save them in a file in the repo.
 
@@ -66,7 +66,7 @@ By default rsconnect uploads **everything** in the folder. That includes files g
 |---|---|
 | `app.R` | `context/` (lecturer's material) |
 | `R/` (Shiny sources it before `app.R`) | `docs/`, `tests/`, `data-raw/` |
-| `data/` (lookups and the sample snapshot, about 0.5 MB) | `README.md`, `STATE.md`, `CLAUDE.md` |
+| `data/` (lookups and the sample snapshot, about 0.5 MB) | `README.md`, `CLAUDE.md` |
 | `www/` (the CSS and JavaScript; without it the map and the panels break) | `deploy.R`, `.git/` |
 | | `.Renviron` (not needed since 26 Oct, section 4) |
 
@@ -87,7 +87,7 @@ files <- c(
 rsconnect::deployApp(
   appDir = ".",
   appFiles = files,
-  appName = "stat3037a-flights",
+  appName = "stat3037a-skystats",
   appTitle = "SkyStats (STAT3037A)",
   forceUpdate = TRUE
 )
@@ -101,7 +101,7 @@ To deploy, open the repo in Positron and run `source("deploy.R")`. To update the
 
 1. **Open the URL and look at the badge.** On shinyapps.io it says "Sample snapshot", and its tooltip says live data is off on this server, which is expected (section 1). Check that the sample time is recent. Any other message means something else is wrong (see section 8).
 2. **Run each method once** (Spatial autocorrelation, Point patterns, Regression) in at least one region.
-3. **Read the logs** if anything fails: the app's **Logs** tab on shinyapps.io, or `rsconnect::showLogs(appName = "stat3037a-flights")`.
+3. **Read the logs** if anything fails: the app's **Logs** tab on shinyapps.io, or `rsconnect::showLogs(appName = "stat3037a-skystats")`.
 4. **Check memory.** The free plan gives each app a limited amount of memory. If the logs show the app being killed, try a smaller region or hex size first.
 5. **Test on a phone or another computer** that has never opened the app, to see what the lecturer will see.
 
