@@ -446,7 +446,26 @@
       });
     }
 
+    // The loading screen: hidden when R sends "app-ready" after the first
+    // snapshot, or after 30 s or a disconnect, so it never hides an error.
+    function hideLoader() {
+      var el = document.getElementById("app-loader");
+      if (!el || el.classList.contains("done")) return;
+      el.classList.add("done");
+      document.body.classList.remove("app-loading");
+      setTimeout(function () {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      }, 600);
+    }
+    setTimeout(hideLoader, 30000);
+    if (window.jQuery) jQuery(document).on("shiny:disconnected", hideLoader);
+
     if (window.Shiny && Shiny.addCustomMessageHandler) {
+      // Shiny insists on a one-argument handler, even when it is unused.
+      Shiny.addCustomMessageHandler("app-ready", function (msg) {
+        // A beat for the map and planes to paint before the fade.
+        setTimeout(hideLoader, 250);
+      });
       Shiny.addCustomMessageHandler("map-pane", function (msg) {
         setPane(msg.pane, msg.state);
       });

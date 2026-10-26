@@ -135,6 +135,20 @@ ui <- page(
     tags$script(src = "planes.js"),
     tags$script(src = "tour.js")
   ),
+  # Covers the page until the first snapshot arrives (www/app.js hides it on
+  # the "app-ready" message). The page's entrance animations wait for it.
+  div(
+    id = "app-loader",
+    role = "status",
+    `aria-live` = "polite",
+    div(
+      class = "loader-inner",
+      div(class = "loader-brand", bs_icon("airplane-fill", class = "loader-icon"), "SkyStats"),
+      div(class = "loader-track", div(class = "loader-bar")),
+      p(class = "loader-text", "Loading flights")
+    )
+  ),
+  tags$script(HTML("document.body.classList.add('app-loading');")),
   div(id = "map-wrap", leafletOutput("map", height = "100%")),
   top_bar,
   left_col,
@@ -152,6 +166,10 @@ server <- function(input, output, session) {
     invalidateLater(poll_ms)
     snapshot(get_states())
   })
+
+  # Hide the loading screen once the first snapshot is in (www/app.js waits a
+  # beat so the map and planes paint first).
+  observeEvent(snapshot(), session$sendCustomMessage("app-ready", list()), once = TRUE)
 
   observeEvent(input$refresh, {
     snapshot(get_states(force = TRUE))

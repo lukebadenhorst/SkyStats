@@ -55,6 +55,32 @@ test_that("no credentials falls back to the sample without calling the API", {
   expect_gt(nrow(out$data), 1000)
 })
 
+test_that("offline mode serves the sample without calling the API", {
+  called <- FALSE
+  out <- get_states(
+    store = new_states_store(),
+    fetch = function() {
+      called <<- TRUE
+      fake_live()
+    },
+    has_creds = TRUE,
+    sample_path = sample_path,
+    offline = TRUE
+  )
+  expect_false(called)
+  expect_equal(out$source, "sample")
+  expect_match(out$message, "off on this server")
+})
+
+test_that("opensky_offline() reads SKYSTATS_OFFLINE and spots shinyapps.io", {
+  withr::local_envvar(SKYSTATS_OFFLINE = "", R_CONFIG_ACTIVE = "")
+  expect_false(opensky_offline())
+  withr::local_envvar(SKYSTATS_OFFLINE = "true")
+  expect_true(opensky_offline())
+  withr::local_envvar(SKYSTATS_OFFLINE = "", R_CONFIG_ACTIVE = "shinyapps")
+  expect_true(opensky_offline())
+})
+
 test_that("an API failure with no previous data falls back to the sample", {
   out <- get_states(
     store = new_states_store(),

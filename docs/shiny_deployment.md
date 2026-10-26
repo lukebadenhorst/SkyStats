@@ -8,6 +8,7 @@ We have to hand in both the GitHub repo and a published app. This doc explains h
 
 > **Confirmed on 24 Oct: OpenSky blocks shinyapps.io.** The hosted app is at <https://wjpfz8-luke-badenhorst.shinyapps.io/stat3037a-flights/>, and it always shows the bundled sample (badge: "Sample"). A test app on the same server could not open a connection to either `auth.opensky-network.org` or `opensky-network.org` (no reply within 15 seconds), while Google and GitHub answered in 0.1 seconds. So the server's internet works, and OpenSky silently drops connections from it, most likely because it blocks cloud data centres. No change to our code or credentials can fix this, and calling the API without signing in is blocked too. What we do instead:
 >
+> - **No wait on the hosted app (26 Oct):** the app spots shinyapps.io (it sets `R_CONFIG_ACTIVE=shinyapps`) and goes straight to the sample instead of waiting for OpenSky to time out. Set `SKYSTATS_OFFLINE=true` to get the same behaviour locally. `deploy.R` no longer uploads `.Renviron`, so the credentials are not on the server (section 4).
 > - **Hosted app:** recapture the sample shortly before submitting and redeploy (section 8), so the snapshot is recent.
 > - **Class presentation:** run the app from a laptop in Positron, where live data works.
 > - **README and write-up:** say why the hosted app shows a snapshot, so markers don't take it for a bug.
@@ -40,6 +41,8 @@ We use shinyapps.io because it works with the private repo as it is. One group m
 
 ## 4. Getting the OpenSky credentials onto the server
 
+> **Not used since 26 Oct.** Because OpenSky blocks shinyapps.io, the hosted app runs in offline mode and `deploy.R` does not upload `.Renviron`. Kept for reference in case we move to a host OpenSky accepts.
+
 shinyapps.io has no settings page for secrets. Instead, rsconnect uploads a `.Renviron` file from the app folder along with the app, and R reads it when the app starts.
 
 1. Create `.Renviron` in the repo folder (next to `app.R`) with the two lines from your personal `.Renviron`:
@@ -65,18 +68,17 @@ By default rsconnect uploads **everything** in the folder. That includes files g
 | `R/` (Shiny sources it before `app.R`) | `docs/`, `tests/`, `data-raw/` |
 | `data/` (lookups and the sample snapshot, about 0.5 MB) | `README.md`, `STATE.md`, `CLAUDE.md` |
 | `www/` (the CSS and JavaScript; without it the map and the panels break) | `deploy.R`, `.git/` |
-| `.Renviron` (the credentials) | |
+| | `.Renviron` (not needed since 26 Oct, section 4) |
 
 If a new folder the app needs is added later, add it to the list in `deploy.R` too.
 
 ## 6. The deploy script
 
-`deploy.R` at the repo root does the deploy. Shiny only runs `app.R` and the files in `R/`, so the app ignores it. Before deploying, it stops with a message if rsconnect is not installed, no shinyapps.io account is set up, or `.Renviron` is missing. The core of it:
+`deploy.R` at the repo root does the deploy. Shiny only runs `app.R` and the files in `R/`, so the app ignores it. Before deploying, it stops with a message if rsconnect is not installed or no shinyapps.io account is set up. The core of it:
 
 ```r
 files <- c(
   "app.R",
-  ".Renviron",
   list.files("R", full.names = TRUE),
   list.files("data", recursive = TRUE, full.names = TRUE),
   list.files("www", recursive = TRUE, full.names = TRUE)
@@ -97,7 +99,7 @@ To deploy, open the repo in Positron and run `source("deploy.R")`. To update the
 
 ## 7. Checks after deploying
 
-1. **Open the URL and look at the badge.** On shinyapps.io it says "Sample" with an "OpenSky request failed … Connection timeout" message, which is expected (section 1). Check that the sample time is recent. Any other message means something else is wrong (see section 8).
+1. **Open the URL and look at the badge.** On shinyapps.io it says "Sample snapshot", and its tooltip says live data is off on this server, which is expected (section 1). Check that the sample time is recent. Any other message means something else is wrong (see section 8).
 2. **Run each method once** (Spatial autocorrelation, Point patterns, Regression) in at least one region.
 3. **Read the logs** if anything fails: the app's **Logs** tab on shinyapps.io, or `rsconnect::showLogs(appName = "stat3037a-flights")`.
 4. **Check memory.** The free plan gives each app a limited amount of memory. If the logs show the app being killed, try a smaller region or hex size first.

@@ -1,5 +1,5 @@
 test_that("the shared map has one pane per layer, in z-order", {
-  expect_equal(names(map_panes), c("autocorr", "quadrat", "regression", "tour", "planes"))
+  expect_equal(names(map_panes), c("autocorr", "quadrat", "regression", "tour", "labels", "planes"))
   expect_true(all(diff(map_panes) > 0))
 })
 
