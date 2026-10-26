@@ -15,6 +15,14 @@ opensky_has_credentials <- function() {
     nzchar(Sys.getenv("OPENSKY_CLIENT_SECRET"))
 }
 
+# Live data is off when SKYSTATS_OFFLINE is "true", or on shinyapps.io (which
+# sets R_CONFIG_ACTIVE to "shinyapps"). OpenSky silently drops connections from
+# shinyapps.io, so trying would only make every visitor wait for the timeout.
+opensky_offline <- function() {
+  tolower(Sys.getenv("SKYSTATS_OFFLINE")) %in% c("true", "1") ||
+    identical(Sys.getenv("R_CONFIG_ACTIVE"), "shinyapps")
+}
+
 opensky_client <- function() {
   httr2::oauth_client(
     id = Sys.getenv("OPENSKY_CLIENT_ID"),
@@ -111,7 +119,8 @@ get_states <- function(
   store = states_store,
   fetch = fetch_states_live,
   has_creds = opensky_has_credentials(),
-  sample_path = sample_states_path
+  sample_path = sample_states_path,
+  offline = opensky_offline()
 ) {
   now <- as.numeric(Sys.time())
 
@@ -137,6 +146,9 @@ get_states <- function(
     list(data = s$data, time = s$time, source = "sample", message = message)
   }
 
+  if (offline) {
+    return(fallback("Live data is off on this server, so showing the sample snapshot."))
+  }
   if (!has_creds) {
     return(fallback("No OpenSky credentials set, so showing the sample snapshot."))
   }
