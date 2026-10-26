@@ -4,8 +4,23 @@
 # Uses leaflet:: prefixes because the test helper sources this file without
 # attaching leaflet.
 
-# Pane z-indexes: the method layers above the tiles and below the planes.
-map_panes <- c(autocorr = 410L, quadrat = 411L, regression = 412L, tour = 413L, planes = 450L)
+# Pane z-indexes: the method layers above the tiles, then the place names
+# (so countries and cities stay readable over the hexes), then the planes.
+map_panes <- c(
+  autocorr = 410L,
+  quadrat = 411L,
+  regression = 412L,
+  tour = 413L,
+  labels = 420L,
+  planes = 450L
+)
+
+# The basemap has no place names, so they come from Esri's matching
+# labels-only layer, drawn in the labels pane.
+labels_tiles_url <- paste0(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/",
+  "Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+)
 
 shared_map <- function() {
   m <- leaflet::leaflet(
@@ -21,6 +36,10 @@ shared_map <- function() {
     m <- leaflet::addMapPane(m, pane, zIndex = map_panes[[pane]])
   }
   m |>
+    leaflet::addTiles(
+      urlTemplate = labels_tiles_url,
+      options = leaflet::tileOptions(pane = "labels", maxNativeZoom = 16)
+    ) |>
     leaflet::setView(lng = 10, lat = 25, zoom = 2) |>
     # The zoom buttons sit bottom right, clear of the floating panels.
     # gfMapReady (www/app.js) applies any pane states sent before the map existed.

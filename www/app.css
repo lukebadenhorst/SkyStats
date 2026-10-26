@@ -166,6 +166,13 @@ body.setup-open .setup-dim {
   opacity: 0.35;
 }
 
+/* Place names sit above the method layers, so clicks and hovers must pass
+   through them to the hexes and quadrats underneath. */
+.leaflet-labels-pane,
+.leaflet-labels-pane * {
+  pointer-events: none !important;
+}
+
 /* The aircraft canvas (www/planes.js): fades in with the first data. Map
    events reach the planes through the map, so the canvas never blocks the
    layers below it. */
@@ -258,7 +265,8 @@ body.setup-open .setup-dim {
   background: #1a1a1a;
 }
 
-[data-bs-theme="dark"] .leaflet-tile-pane {
+[data-bs-theme="dark"] .leaflet-tile-pane,
+[data-bs-theme="dark"] .leaflet-labels-pane {
   filter: invert(1) hue-rotate(180deg) brightness(0.9);
 }
 
